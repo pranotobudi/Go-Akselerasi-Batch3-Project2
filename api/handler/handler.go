@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo"
@@ -38,7 +39,7 @@ func (h *handler) AuthorRegistrationSendEmail(c echo.Context) error {
 		"Subject: Registration Confirmation Email from News App!\r\n" +
 		"\r\n" +
 		"This is the email body.\r\n" +
-		"http://localhost:8080/api/v1/movie_reviews/register/confirmation?email=" + email + "&token=" + regToken + "&role=author")
+		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=author")
 
 	toEmail := []string{email}
 	helper.SendEmail(toEmail, msg)
@@ -75,7 +76,7 @@ func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
 		"Subject: Registration Confirmation Email from News App!\r\n" +
 		"\r\n" +
 		"This is the email body.\r\n" +
-		"http://localhost:8080/api/v1/movie_reviews/register/confirmation?email=" + email + "&token=" + regToken + "&role=author")
+		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=reader")
 
 	toEmail := []string{email}
 	helper.SendEmail(toEmail, msg)
@@ -89,6 +90,297 @@ func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
 	readerRegistrationData := service.ReaderRegistrationResponseFormatter(newReaderRegistration, auth_token)
 
 	response := helper.ResponseFormatter(http.StatusOK, "success", "sending email for reader registration successfull", readerRegistrationData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) AdminRegistrationSendEmail(c echo.Context) error {
+	adminReq := new(service.RequestAdmin)
+	if err := c.Bind(adminReq); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	//Send Confirmation Email
+	regToken := randstr.Hex(16) // generate 128-bit hex string
+	newAdminRegistration, err := h.service.AddAdminRegistrationSendEmail(*adminReq, regToken)
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "ragistration send email failed", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	email := adminReq.Email
+	msg := []byte("To: " + email + "\r\n" +
+		"Subject: Registration Confirmation Email from News App!\r\n" +
+		"\r\n" +
+		"This is the email body.\r\n" +
+		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=admin")
+
+	toEmail := []string{email}
+	helper.SendEmail(toEmail, msg)
+
+	auth_token, err := h.authService.CreateAccessToken("admin")
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+	adminRegistrationData := service.AdminRegistrationResponseFormatter(newAdminRegistration, auth_token)
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "sending email for admin registration successfull", adminRegistrationData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) RegisterConfirmation(c echo.Context) error {
+	role := c.QueryParam("role")
+	fmt.Println("INSIDE Handler:RegisterConfirmation role:", role)
+
+	var err error
+	if role == "author" {
+		err = h.AuthorRegisterConfirmation(c)
+	} else if role == "reader" {
+		err = h.ReaderRegisterConfirmation(c)
+	} else if role == "admin" {
+		err = h.AdminRegisterConfirmation(c)
+	}
+	return err
+}
+
+func (h *handler) AuthorRegisterConfirmation(c echo.Context) error {
+	email := c.QueryParam("email")
+	token := c.QueryParam("token")
+	fmt.Println("INSIDE userHandler:AuthorRegisterConfirmation email:", email, " token: ", token)
+	registration, err := h.service.GetAuthorRegistration(email)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	if registration.RegistrationToken != token {
+		errorFormatter := helper.ErrorFormatter(fmt.Errorf("token is not valid"))
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+
+	}
+
+	// Add to Author Table
+	author := new(service.RequestAuthor)
+	author.Name = registration.Name
+	author.Email = registration.Email
+	author.Password = registration.Password
+	author.Username = registration.Username
+	author.ProfPic = registration.ProfPic
+	author.KtpPic = registration.KtpPic
+	author.Experienced = registration.Experienced
+
+	newAuthor, _ := h.service.CreateAuthor(*author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Send response
+
+	// role, _ := h.service.GetRole(newUser.ID)
+	auth_token, err := h.authService.CreateAccessToken("author")
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author registration confirmation successfull, author created", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+func (h *handler) ReaderRegisterConfirmation(c echo.Context) error {
+	email := c.QueryParam("email")
+	token := c.QueryParam("token")
+	fmt.Println("INSIDE userHandler:ReaderRegisterConfirmation email:", email, " token: ", token)
+	registration, err := h.service.GetReaderRegistration(email)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	if registration.RegistrationToken != token {
+		errorFormatter := helper.ErrorFormatter(fmt.Errorf("token is not valid"))
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+
+	}
+
+	// Add to Reader Table
+	reader := new(service.RequestReader)
+	reader.Name = registration.Name
+	reader.Email = registration.Email
+	reader.Password = registration.Password
+	reader.Username = registration.Username
+	reader.ProfPic = registration.ProfPic
+
+	newReader, _ := h.service.CreateReader(*reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Send response
+
+	// role, _ := h.service.GetRole(newUser.ID)
+	auth_token, err := h.authService.CreateAccessToken("reader")
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+	readerData := service.ReaderResponseFormatter(*newReader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "reader registration confirmation successfull, reader created", readerData)
+
+	return c.JSON(http.StatusOK, response)
+
+}
+func (h *handler) AdminRegisterConfirmation(c echo.Context) error {
+	email := c.QueryParam("email")
+	token := c.QueryParam("token")
+	fmt.Println("INSIDE userHandler:ReaderRegisterConfirmation email:", email, " token: ", token)
+	registration, err := h.service.GetAdminRegistration(email)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	if registration.RegistrationToken != token {
+		errorFormatter := helper.ErrorFormatter(fmt.Errorf("token is not valid"))
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+
+	}
+
+	// Add to Admin Table
+	admin := new(service.RequestAdmin)
+	admin.Name = registration.Name
+	admin.Email = registration.Email
+	admin.Password = registration.Password
+	admin.Username = registration.Username
+	admin.ProfPic = registration.ProfPic
+
+	newAdmin, _ := h.service.CreateAdmin(*admin)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	// Send response
+
+	// role, _ := h.service.GetRole(newUser.ID)
+	auth_token, err := h.authService.CreateAccessToken("admin")
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+	adminData := service.AdminResponseFormatter(*newAdmin, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "admin registration confirmation successfull, admin created", adminData)
+
+	return c.JSON(http.StatusOK, response)
+
+}
+
+func (h *handler) UserLogin(c echo.Context) error {
+	userLogin := new(service.RequestUserLogin)
+	if err := c.Bind(userLogin); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	authUser, err := h.service.AuthUser(*userLogin)
+	if err != nil {
+		fmt.Println("We're IN HERE: USERLOGIN INSIDE")
+		response := helper.ResponseFormatter(http.StatusUnauthorized, "error", err.Error(), nil)
+		return c.JSON(http.StatusUnauthorized, response)
+	}
+	// role, _ := h.service.GetRole(authUser.ID)
+
+	auth_token, err := h.authService.CreateAccessToken(authUser.Role)
+	if err != nil {
+		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
+
+		return c.JSON(http.StatusInternalServerError, response)
+	}
+
+	userData := service.UserResponseFormatter(*authUser, auth_token)
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "user authenticated", userData)
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) AddNews(c echo.Context) error {
+	news := new(service.RequestNews)
+	if err := c.Bind(news); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newNews, err := h.service.AddNews(*news)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	author, _ := h.service.GetAuthorByID(uint(newNews.AuthorID))
+	category, _ := h.service.GetCategory(uint(newNews.CategoryID))
+
+	newsData := service.NewsResponseFormatter(*newNews, *author, *category)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "news successfully added", newsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) GetAllNews(c echo.Context) error {
+	news, err := h.service.GetAllNews()
+	fmt.Printf("\n Handler GetAllNews: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalUserData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		userData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalUserData = append(finalUserData, userData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news succeeded", finalUserData)
 
 	return c.JSON(http.StatusOK, response)
 }

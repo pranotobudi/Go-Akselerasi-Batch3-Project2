@@ -73,7 +73,7 @@ func NewsCommentDataSeed(db *gorm.DB) {
 }
 func InitDBTable(db *gorm.DB) {
 	// db.AutoMigrate(&User{}, &Event{}, &Transaction{}, &Registration{})
-	db.AutoMigrate(entity.AuthorRegistration{}, entity.ReaderRegistration{}, entity.Author{}, entity.Admin{}, entity.Reader{}, entity.Category{}, entity.News{}, entity.NewsComment{})
+	db.AutoMigrate(entity.AuthorRegistration{}, entity.ReaderRegistration{}, entity.AdminRegistration{}, entity.Author{}, entity.Admin{}, entity.Reader{}, entity.Category{}, entity.News{}, entity.NewsComment{})
 
 	// Create Fresh AuthorRegistration Table
 	if (db.Migrator().HasTable(&entity.AuthorRegistration{})) {
@@ -88,6 +88,13 @@ func InitDBTable(db *gorm.DB) {
 		db.Migrator().DropTable(&entity.ReaderRegistration{})
 	}
 	db.Migrator().CreateTable(&entity.ReaderRegistration{})
+
+	// Create Fresh AdminRegistration Table
+	if (db.Migrator().HasTable(&entity.AdminRegistration{})) {
+		fmt.Println("AdminRegistration table exist")
+		db.Migrator().DropTable(&entity.AdminRegistration{})
+	}
+	db.Migrator().CreateTable(&entity.AdminRegistration{})
 
 	// Create Fresh Author Table
 	if (db.Migrator().HasTable(&entity.Author{})) {

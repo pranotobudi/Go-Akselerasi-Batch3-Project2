@@ -39,38 +39,37 @@ func (r NewsRoutes) Route() []helper.Route {
 			Handler: newsHandler.ReaderRegistrationSendEmail,
 		},
 		{
-			Method: echo.POST,
-			Path:   "/register/admin",
-			// Handler: userHandler.UserRegistration,
-			Handler: newsHandler.AuthorRegistrationSendEmail,
+			Method:  echo.POST,
+			Path:    "/register/admins",
+			Handler: newsHandler.AdminRegistrationSendEmail,
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/register/confirmation",
-			Handler: newsHandler.AuthorRegistrationSendEmail,
+			Handler: newsHandler.RegisterConfirmation,
 		},
 		{
 			Method:  echo.POST,
 			Path:    "/login",
-			Handler: newsHandler.AuthorRegistrationSendEmail,
+			Handler: newsHandler.UserLogin,
 		},
 		{
-			Method: echo.POST,
-			Path:   "/news",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.POST,
+			Path:    "/news",
+			Handler: newsHandler.AddNews,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 		{
-			Method: echo.GET,
-			Path:   "/news",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.GET,
+			Path:    "/news",
+			Handler: newsHandler.GetAllNews,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 		{
 			Method: echo.GET,

@@ -39,6 +39,16 @@ type ReaderRegistration struct {
 	RegistrationToken string
 	TimeCreated       time.Time
 }
+type AdminRegistration struct {
+	gorm.Model
+	Name              string `json:"name"`
+	Email             string `json:"email"`
+	Password          string `json:"password"`
+	Username          string `json:"username"`
+	ProfPic           string `json:"prof_pic"`
+	RegistrationToken string
+	TimeCreated       time.Time
+}
 
 type Reader struct {
 	gorm.Model
@@ -46,7 +56,7 @@ type Reader struct {
 	Email        string
 	Password     string
 	Username     string
-	Prof_Pic     string
+	ProfPic      string
 	NewsComments []NewsComment `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 type RegistrationReader struct {
@@ -55,7 +65,7 @@ type RegistrationReader struct {
 	Email             string
 	Password          string
 	Username          string
-	Prof_Pic          string
+	ProfPic           string
 	RegistrationToken string
 	TimeCreated       time.Time
 }
@@ -66,7 +76,17 @@ type Admin struct {
 	Email    string
 	Password string
 	Username string
-	Prof_Pic string
+	ProfPic  string
+}
+
+type User struct {
+	gorm.Model
+	Name     string
+	Email    string
+	Password string
+	Username string
+	ProfPic  string
+	Role     string
 }
 
 type Category struct {
