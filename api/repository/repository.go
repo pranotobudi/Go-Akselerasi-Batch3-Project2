@@ -27,6 +27,7 @@ type Repository interface {
 	GetCategory(id uint) (*entity.Category, error)
 	GetAuthorByID(id uint) (*entity.Author, error)
 	GetAllNews() ([]entity.News, error)
+	GetNews(id uint) (*entity.News, error)
 }
 
 type repository struct {
@@ -207,4 +208,13 @@ func (r *repository) GetAllNews() ([]entity.News, error) {
 		return news, fmt.Errorf("table is empty")
 	}
 	return news, nil
+}
+
+func (r *repository) GetNews(id uint) (*entity.News, error) {
+	var news entity.News
+	err := r.db.Find(&news, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &news, nil
 }

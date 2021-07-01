@@ -26,6 +26,7 @@ type Services interface {
 	GetCategory(id uint) (*entity.Category, error)
 	GetAuthorByID(id uint) (*entity.Author, error)
 	GetAllNews() ([]entity.News, error)
+	GetNews(newsID uint) (*entity.News, error)
 }
 
 type services struct {
@@ -250,6 +251,14 @@ func (s *services) GetAuthorByID(id uint) (*entity.Author, error) {
 }
 func (s *services) GetAllNews() ([]entity.News, error) {
 	news, err := s.repository.GetAllNews()
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
+}
+
+func (s *services) GetNews(newsID uint) (*entity.News, error) {
+	news, err := s.repository.GetNews(newsID)
 	if err != nil {
 		return nil, err
 	}

@@ -3,6 +3,7 @@ package handler
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"github.com/labstack/echo"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/api/service"
@@ -371,16 +372,36 @@ func (h *handler) GetAllNews(c echo.Context) error {
 
 		return c.JSON(http.StatusBadRequest, response)
 	}
-	var finalUserData []service.ResponseNews
+	var finalNewsData []service.ResponseNews
 	for _, singleNews := range news {
 		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
 		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
 
-		userData := service.NewsResponseFormatter(singleNews, *author, *category)
-		finalUserData = append(finalUserData, userData)
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
 	}
 
-	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news succeeded", finalUserData)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) GetNews(c echo.Context) error {
+	newsID, _ := strconv.Atoi(c.Param("id"))
+
+	news, err := h.service.GetNews(uint(newsID))
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	author, _ := h.service.GetAuthorByID(uint(news.AuthorID))
+	category, _ := h.service.GetCategory(uint(news.CategoryID))
+
+	newsData := service.NewsResponseFormatter(*news, *author, *category)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get news successfull", newsData)
 
 	return c.JSON(http.StatusOK, response)
 }
