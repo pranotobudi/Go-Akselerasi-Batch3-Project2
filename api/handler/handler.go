@@ -436,3 +436,24 @@ func (h *handler) UpdateNews(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *handler) DeleteNews(c echo.Context) error {
+	newsID, _ := strconv.Atoi(c.Param("id"))
+
+	news, err := h.service.DeleteNews(uint(newsID))
+	fmt.Printf("================HANDLER NEWS: %+v \n\n", news)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	author, _ := h.service.GetAuthorByID(uint(news.AuthorID))
+	category, _ := h.service.GetCategory(uint(news.CategoryID))
+
+	newsData := service.NewsResponseFormatter(*news, *author, *category)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "delete news successfull", newsData)
+
+	return c.JSON(http.StatusOK, response)
+}

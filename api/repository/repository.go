@@ -29,6 +29,7 @@ type Repository interface {
 	GetAllNews() ([]entity.News, error)
 	GetNews(id uint) (*entity.News, error)
 	UpdateNews(news entity.News) (*entity.News, error)
+	DeleteNews(id uint) (*entity.News, error)
 }
 
 type repository struct {
@@ -222,6 +223,20 @@ func (r *repository) GetNews(id uint) (*entity.News, error) {
 
 func (r *repository) UpdateNews(news entity.News) (*entity.News, error) {
 	err := r.db.Save(&news).Error
+	if err != nil {
+		return nil, err
+	}
+	return &news, nil
+}
+
+func (r *repository) DeleteNews(id uint) (*entity.News, error) {
+	var news entity.News
+	err := r.db.Find(&news, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.Delete(&news, "id=?", id).Error
+	fmt.Printf("================REPOSITORY NEWS: %+v \n\n", news)
 	if err != nil {
 		return nil, err
 	}
