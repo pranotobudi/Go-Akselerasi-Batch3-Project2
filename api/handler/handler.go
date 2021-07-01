@@ -405,3 +405,34 @@ func (h *handler) GetNews(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *handler) UpdateNews(c echo.Context) error {
+	newsID, _ := strconv.Atoi(c.Param("id"))
+
+	news := new(service.RequestNews)
+	if err := c.Bind(news); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	isExist := h.service.IsNewsExist(uint(newsID))
+	if isExist == false {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "record not found", nil)
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	newNews, err := h.service.UpdateNews(*news)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	author, _ := h.service.GetAuthorByID(uint(newNews.AuthorID))
+	category, _ := h.service.GetCategory(uint(newNews.CategoryID))
+
+	newsData := service.NewsResponseFormatter(*newNews, *author, *category)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "news successfully updated", newsData)
+
+	return c.JSON(http.StatusOK, response)
+}

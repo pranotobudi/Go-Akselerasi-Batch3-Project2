@@ -28,6 +28,7 @@ type Repository interface {
 	GetAuthorByID(id uint) (*entity.Author, error)
 	GetAllNews() ([]entity.News, error)
 	GetNews(id uint) (*entity.News, error)
+	UpdateNews(news entity.News) (*entity.News, error)
 }
 
 type repository struct {
@@ -213,6 +214,14 @@ func (r *repository) GetAllNews() ([]entity.News, error) {
 func (r *repository) GetNews(id uint) (*entity.News, error) {
 	var news entity.News
 	err := r.db.Find(&news, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &news, nil
+}
+
+func (r *repository) UpdateNews(news entity.News) (*entity.News, error) {
+	err := r.db.Save(&news).Error
 	if err != nil {
 		return nil, err
 	}

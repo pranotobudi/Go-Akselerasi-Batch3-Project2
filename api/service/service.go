@@ -27,6 +27,8 @@ type Services interface {
 	GetAuthorByID(id uint) (*entity.Author, error)
 	GetAllNews() ([]entity.News, error)
 	GetNews(newsID uint) (*entity.News, error)
+	IsNewsExist(id uint) bool
+	UpdateNews(req RequestNews) (*entity.News, error)
 }
 
 type services struct {
@@ -263,4 +265,28 @@ func (s *services) GetNews(newsID uint) (*entity.News, error) {
 		return nil, err
 	}
 	return news, nil
+}
+
+func (s *services) IsNewsExist(id uint) bool {
+	news, _ := s.repository.GetNews(id)
+	if news == nil {
+		return false
+	}
+	return true
+}
+
+func (s *services) UpdateNews(req RequestNews) (*entity.News, error) {
+	news := entity.News{}
+	news.AuthorID = req.AuthorID
+	news.CategoryID = req.CategoryID
+	news.Title = req.Title
+	news.Content = req.Content
+	news.ImageUrl = req.ImageUrl
+
+	newNews, err := s.repository.UpdateNews(news)
+	if err != nil {
+		return nil, err
+	}
+	return newNews, nil
+
 }

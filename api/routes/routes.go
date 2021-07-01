@@ -81,13 +81,13 @@ func (r NewsRoutes) Route() []helper.Route {
 			// },
 		},
 		{
-			Method: echo.PUT,
-			Path:   "/news/:id",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.PUT,
+			Path:    "/news/:id",
+			Handler: newsHandler.UpdateNews,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 		{
 			Method: echo.DELETE,
