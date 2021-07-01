@@ -30,6 +30,7 @@ type Repository interface {
 	GetNews(id uint) (*entity.News, error)
 	UpdateNews(news entity.News) (*entity.News, error)
 	DeleteNews(id uint) (*entity.News, error)
+	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
 }
 
 type repository struct {
@@ -241,4 +242,15 @@ func (r *repository) DeleteNews(id uint) (*entity.News, error) {
 		return nil, err
 	}
 	return &news, nil
+}
+
+func (r *repository) GetNewsByCategoryID(categoryID uint) ([]entity.News, error) {
+	var news []entity.News
+	result := r.db.Preload("NewsComments").Find(&news, "category_id=?", categoryID)
+	if result.Error != nil {
+		return news, result.Error
+	} else if result.RowsAffected < 1 {
+		return news, fmt.Errorf("table is empty")
+	}
+	return news, nil
 }

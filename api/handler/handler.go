@@ -457,3 +457,29 @@ func (h *handler) DeleteNews(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *handler) GetNewsByCategoryID(c echo.Context) error {
+	categoryID, _ := strconv.Atoi(c.Param("id"))
+	news, err := h.service.GetNewsByCategoryID(uint(categoryID))
+	fmt.Printf("\n Handler GetNewsByCategoryID: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalNewsData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get news by category succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}

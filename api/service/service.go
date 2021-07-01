@@ -30,6 +30,7 @@ type Services interface {
 	IsNewsExist(id uint) bool
 	UpdateNews(req RequestNews) (*entity.News, error)
 	DeleteNews(newsID uint) (*entity.News, error)
+	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
 }
 
 type services struct {
@@ -294,6 +295,14 @@ func (s *services) UpdateNews(req RequestNews) (*entity.News, error) {
 
 func (s *services) DeleteNews(newsID uint) (*entity.News, error) {
 	news, err := s.repository.DeleteNews(newsID)
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
+}
+
+func (s *services) GetNewsByCategoryID(categoryID uint) ([]entity.News, error) {
+	news, err := s.repository.GetNewsByCategoryID(categoryID)
 	if err != nil {
 		return nil, err
 	}
