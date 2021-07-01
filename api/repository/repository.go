@@ -31,6 +31,7 @@ type Repository interface {
 	UpdateNews(news entity.News) (*entity.News, error)
 	DeleteNews(id uint) (*entity.News, error)
 	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
+	GetAllTrendingNews() ([]entity.News, error)
 }
 
 type repository struct {
@@ -123,7 +124,7 @@ func (r *repository) GetAuthor(username string) (*entity.Author, error) {
 
 func (r *repository) GetReader(username string) (*entity.Reader, error) {
 	var reader entity.Reader
-	err := r.db.First(&reader, "username=?", username).Error
+	err := r.db.Preload("NewsReaders").First(&reader, "username=?", username).Error
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +205,7 @@ func (r *repository) GetAuthorByID(id uint) (*entity.Author, error) {
 
 func (r *repository) GetAllNews() ([]entity.News, error) {
 	var news []entity.News
-	result := r.db.Preload("NewsComments").Find(&news)
+	result := r.db.Preload("NewsReaders").Preload("NewsComments").Find(&news)
 	if result.Error != nil {
 		return news, result.Error
 	} else if result.RowsAffected < 1 {
@@ -215,7 +216,7 @@ func (r *repository) GetAllNews() ([]entity.News, error) {
 
 func (r *repository) GetNews(id uint) (*entity.News, error) {
 	var news entity.News
-	err := r.db.Find(&news, "id=?", id).Error
+	err := r.db.Preload("NewsReaders").Find(&news, "id=?", id).Error
 	if err != nil {
 		return nil, err
 	}
@@ -237,7 +238,7 @@ func (r *repository) DeleteNews(id uint) (*entity.News, error) {
 		return nil, err
 	}
 	err = r.db.Delete(&news, "id=?", id).Error
-	fmt.Printf("================REPOSITORY NEWS: %+v \n\n", news)
+	// fmt.Printf("================REPOSITORY NEWS: %+v \n\n", news)
 	if err != nil {
 		return nil, err
 	}
@@ -253,4 +254,51 @@ func (r *repository) GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
 		return news, fmt.Errorf("table is empty")
 	}
 	return news, nil
+}
+
+func (r *repository) GetAllTrendingNews() ([]entity.News, error) {
+	statement1 := `
+	SELECT news.id, SUM(total_view) FROM news JOIN news_readers
+	ON news.id = news_readers.news_id
+	GROUP BY news.id
+	`
+
+	var trending []entity.Trending
+	result := r.db.Raw(statement1).Scan(&trending)
+	// fmt.Printf("\n========= REPOSITORY GETALLTRENDINGNEWS: %+v \n\n", trending)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	maxView := MaximumView(trending)
+	maxTrendingList := GetMaximumTrendingList(trending, maxView)
+
+	var news []entity.News
+	for _, trending := range maxTrendingList {
+		singleNews, _ := r.GetNews(uint(trending.ID))
+		news = append(news, *singleNews)
+	}
+	return news, nil
+}
+
+func MaximumView(trendings []entity.Trending) int {
+	var max int
+	for _, trending := range trendings {
+		if trending.Sum > max {
+			max = trending.Sum
+		}
+	}
+	return max
+}
+
+func GetMaximumTrendingList(trendings []entity.Trending, maxView int) []entity.Trending {
+	var maxTrending []entity.Trending
+	for _, trending := range trendings {
+		if trending.Sum == maxView {
+			maxTrending = append(maxTrending, trending)
+		}
+	}
+	return maxTrending
 }

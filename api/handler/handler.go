@@ -483,3 +483,28 @@ func (h *handler) GetNewsByCategoryID(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *handler) GetAllTrendingNews(c echo.Context) error {
+	news, err := h.service.GetAllTrendingNews()
+	fmt.Printf("\n Handler GetAllTrendingNews: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalNewsData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}

@@ -109,13 +109,13 @@ func (r NewsRoutes) Route() []helper.Route {
 			// },
 		},
 		{
-			Method: echo.GET,
-			Path:   "/news/trending",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.GET,
+			Path:    "/news/trending",
+			Handler: newsHandler.GetAllTrendingNews,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 		{
 			Method: echo.PUT,

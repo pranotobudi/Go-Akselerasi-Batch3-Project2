@@ -17,6 +17,37 @@ type Author struct {
 	Experienced bool
 	News        []News `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
+
+type Reader struct {
+	gorm.Model
+	Name         string
+	Email        string
+	Password     string
+	Username     string
+	ProfPic      string
+	NewsComments []NewsComment `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	NewsReaders  []NewsReaders `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+}
+type Admin struct {
+	gorm.Model
+	Name       string
+	Email      string
+	Password   string
+	Username   string
+	ProfPic    string
+	Categories []Category `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+}
+
+type User struct {
+	gorm.Model
+	Name     string
+	Email    string
+	Password string
+	Username string
+	ProfPic  string
+	Role     string
+}
+
 type AuthorRegistration struct {
 	gorm.Model
 	Name              string `json:"name"`
@@ -50,15 +81,6 @@ type AdminRegistration struct {
 	TimeCreated       time.Time
 }
 
-type Reader struct {
-	gorm.Model
-	Name         string
-	Email        string
-	Password     string
-	Username     string
-	ProfPic      string
-	NewsComments []NewsComment `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
-}
 type RegistrationReader struct {
 	gorm.Model
 	Name              string
@@ -70,29 +92,11 @@ type RegistrationReader struct {
 	TimeCreated       time.Time
 }
 
-type Admin struct {
-	gorm.Model
-	Name     string
-	Email    string
-	Password string
-	Username string
-	ProfPic  string
-}
-
-type User struct {
-	gorm.Model
-	Name     string
-	Email    string
-	Password string
-	Username string
-	ProfPic  string
-	Role     string
-}
-
 type Category struct {
 	gorm.Model
-	Name string
-	News []News `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	AdminID int
+	Name    string
+	News    []News `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
 type News struct {
@@ -103,11 +107,25 @@ type News struct {
 	Content      string
 	ImageUrl     string
 	NewsComments []NewsComment `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
+	NewsReaders  []NewsReaders `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;"`
 }
 
+type NewsReaders struct {
+	gorm.Model
+	NewsID     int
+	ReaderID   int
+	TotalLike  int
+	TotalShare int
+	TotalView  int
+}
 type NewsComment struct {
 	gorm.Model
 	ReaderID int
 	NewsID   int
 	Comment  string
+}
+
+type Trending struct {
+	ID  int
+	Sum int
 }

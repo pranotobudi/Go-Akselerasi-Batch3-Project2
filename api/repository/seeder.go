@@ -15,7 +15,8 @@ func DBSeed(db *gorm.DB) error {
 	ReaderDataSeed(db)
 	CategoryDataSeed(db)
 	NewsDataSeed(db)
-	NewsCommentDataSeed(db)
+	NewsReaderDataSeed(db)
+	// NewsCommentDataSeed(db)
 	return nil
 }
 
@@ -43,11 +44,11 @@ func ReaderDataSeed(db *gorm.DB) {
 }
 
 func CategoryDataSeed(db *gorm.DB) {
-	statement := "INSERT INTO categories (name, created_at, updated_at) VALUES (?, ?, ?)"
+	statement := "INSERT INTO categories (admin_id, name, created_at, updated_at) VALUES (?, ?, ?, ?)"
 
-	db.Exec(statement, "category1", faker.Timestamp(), faker.Timestamp())
-	db.Exec(statement, "category2", faker.Timestamp(), faker.Timestamp())
-	db.Exec(statement, "category3", faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 1, "category1", faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 1, "category2", faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 1, "category3", faker.Timestamp(), faker.Timestamp())
 }
 
 func NewsDataSeed(db *gorm.DB) {
@@ -71,9 +72,22 @@ func NewsCommentDataSeed(db *gorm.DB) {
 	db.Exec(statement, 2, 2, "comment5", faker.Timestamp(), faker.Timestamp())
 	db.Exec(statement, 3, 2, "comment6", faker.Timestamp(), faker.Timestamp())
 }
+
+func NewsReaderDataSeed(db *gorm.DB) {
+	// statement := "INSERT INTO news_readers (news_id, reader_id, like, share, view) VALUES (?, ?, ?, ?, ?)"
+	statement := "INSERT INTO news_readers (reader_id, news_id, total_like, total_share, total_view, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
+
+	db.Exec(statement, 1, 1, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 2, 1, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 3, 1, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 1, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 2, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 3, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+}
+
 func InitDBTable(db *gorm.DB) {
 	// db.AutoMigrate(&User{}, &Event{}, &Transaction{}, &Registration{})
-	db.AutoMigrate(entity.AuthorRegistration{}, entity.ReaderRegistration{}, entity.AdminRegistration{}, entity.Author{}, entity.Admin{}, entity.Reader{}, entity.Category{}, entity.News{}, entity.NewsComment{})
+	db.AutoMigrate(entity.AuthorRegistration{}, entity.ReaderRegistration{}, entity.AdminRegistration{}, entity.Author{}, entity.Admin{}, entity.Reader{}, entity.Category{}, entity.News{}, entity.NewsReaders{})
 
 	// Create Fresh AuthorRegistration Table
 	if (db.Migrator().HasTable(&entity.AuthorRegistration{})) {
@@ -132,10 +146,17 @@ func InitDBTable(db *gorm.DB) {
 	db.Migrator().CreateTable(&entity.News{})
 
 	// Create Fresh NewsComment Table
-	if (db.Migrator().HasTable(&entity.NewsComment{})) {
-		fmt.Println("NewsComment table exist")
-		db.Migrator().DropTable(&entity.NewsComment{})
+	// if (db.Migrator().HasTable(&entity.NewsComment{})) {
+	// 	fmt.Println("NewsComment table exist")
+	// 	db.Migrator().DropTable(&entity.NewsComment{})
+	// }
+	// db.Migrator().CreateTable(&entity.NewsComment{})
+
+	// Create Fresh NewsReaders Table
+	if (db.Migrator().HasTable(&entity.NewsReaders{})) {
+		fmt.Println("NewsReaders table exist")
+		db.Migrator().DropTable(&entity.NewsReaders{})
 	}
-	db.Migrator().CreateTable(&entity.NewsComment{})
+	db.Migrator().CreateTable(&entity.NewsReaders{})
 
 }

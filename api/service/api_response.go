@@ -82,6 +82,7 @@ type ResponseNews struct {
 	Content      string               `json:"content"`
 	ImageUrl     string               `json:"image_url"`
 	NewsComments []entity.NewsComment `json:"news_comments"`
+	NewsReaders  []entity.NewsReaders `json:"news_readers"`
 }
 
 func AuthorRegistrationResponseFormatter(authorReg entity.AuthorRegistration, auth_token string) ResponseAuthorRegistration {
@@ -191,6 +192,7 @@ func NewsResponseFormatter(news entity.News, author entity.Author, category enti
 		Content:      news.Content,
 		ImageUrl:     news.ImageUrl,
 		NewsComments: news.NewsComments,
+		NewsReaders:  news.NewsReaders,
 	}
 	return formatter
 }
