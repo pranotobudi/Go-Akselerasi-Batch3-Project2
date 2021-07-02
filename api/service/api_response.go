@@ -84,6 +84,11 @@ type ResponseNews struct {
 	NewsComments []entity.NewsComment `json:"news_comments"`
 	NewsReaders  []entity.NewsReaders `json:"news_readers"`
 }
+type ResponseStatistic struct {
+	TotalAuthor int `json:"total_author`
+	TotalReader int `json:"total_reader`
+	TotalNews   int `json:total_news`
+}
 
 func AuthorRegistrationResponseFormatter(authorReg entity.AuthorRegistration, auth_token string) ResponseAuthorRegistration {
 	formatter := ResponseAuthorRegistration{
@@ -193,6 +198,15 @@ func NewsResponseFormatter(news entity.News, author entity.Author, category enti
 		ImageUrl:     news.ImageUrl,
 		NewsComments: news.NewsComments,
 		NewsReaders:  news.NewsReaders,
+	}
+	return formatter
+}
+
+func StatisticResponseFormatter(stat entity.Statistic) ResponseStatistic {
+	formatter := ResponseStatistic{
+		TotalAuthor: stat.TotalAuthor,
+		TotalReader: stat.TotalReader,
+		TotalNews:   stat.TotalNews,
 	}
 	return formatter
 }

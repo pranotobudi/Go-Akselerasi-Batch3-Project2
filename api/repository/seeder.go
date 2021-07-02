@@ -23,11 +23,11 @@ func DBSeed(db *gorm.DB) error {
 func AuthorDataSeed(db *gorm.DB) {
 	statement := "INSERT INTO authors (name, email, password, username, prof_pic, ktp_pic, experienced, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"
 
-	db.Exec(statement, "writer1", "writer1@gmail.com", helper.GeneratePassword("writer1"), "writer1", "http://prof_pic_url_writer1.jpg", "http://ktp_pic_url1_writer1.jpg", true, faker.Timestamp(), faker.Timestamp())
-	db.Exec(statement, "writer2", "writer2@gmail.com", helper.GeneratePassword("writer2"), "writer2", "http://prof_pic_url_writer2.jpg", "http://ktp_pic_url1_writer2.jpg", true, faker.Timestamp(), faker.Timestamp())
-	db.Exec(statement, "writer3", "writer3@gmail.com", helper.GeneratePassword("writer3"), "writer3", "http://prof_pic_url_writer3.jpg", "http://ktp_pic_url1_writer3.jpg", false, faker.Timestamp(), faker.Timestamp())
-
+	db.Exec(statement, "author1", "author1@gmail.com", helper.GeneratePassword("author1"), "author1", "http://prof_pic_url_author1.jpg", "http://ktp_pic_url1_author1.jpg", true, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, "author2", "author2@gmail.com", helper.GeneratePassword("author2"), "author2", "http://prof_pic_url_author2.jpg", "http://ktp_pic_url1_author2.jpg", true, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, "author3", "author3@gmail.com", helper.GeneratePassword("author3"), "author3", "http://prof_pic_url_author3.jpg", "http://ktp_pic_url1_author3.jpg", false, faker.Timestamp(), faker.Timestamp())
 }
+
 func AdminDataSeed(db *gorm.DB) {
 	statement := "INSERT INTO admins (name, email, password, username, prof_pic, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)"
 
@@ -83,6 +83,8 @@ func NewsReaderDataSeed(db *gorm.DB) {
 	db.Exec(statement, 1, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
 	db.Exec(statement, 2, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
 	db.Exec(statement, 3, 2, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 2, 3, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
+	db.Exec(statement, 3, 3, 1, 1, 1, faker.Timestamp(), faker.Timestamp())
 }
 
 func InitDBTable(db *gorm.DB) {

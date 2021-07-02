@@ -32,6 +32,17 @@ type Services interface {
 	DeleteNews(newsID uint) (*entity.News, error)
 	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
 	GetAllTrendingNews() ([]entity.News, error)
+	GetAllHighlightNews(authorID uint) ([]entity.News, error)
+	AddAuthor(req RequestAuthor) (*entity.Author, error)
+	IsAuthorExist(id uint) bool
+	UpdateAuthor(req RequestAuthor) (*entity.Author, error)
+	DeleteAuthor(id uint) (*entity.Author, error)
+	AddReader(req RequestReader) (*entity.Reader, error)
+	GetReader(id uint) (*entity.Reader, error)
+	IsReaderExist(id uint) bool
+	UpdateReader(req RequestReader) (*entity.Reader, error)
+	DeleteReader(id uint) (*entity.Reader, error)
+	GetStatistic() (*entity.Statistic, error)
 }
 
 type services struct {
@@ -247,6 +258,7 @@ func (s *services) GetCategory(id uint) (*entity.Category, error) {
 	}
 	return category, nil
 }
+
 func (s *services) GetAuthorByID(id uint) (*entity.Author, error) {
 	author, err := s.repository.GetAuthorByID(id)
 	if err != nil {
@@ -254,6 +266,7 @@ func (s *services) GetAuthorByID(id uint) (*entity.Author, error) {
 	}
 	return author, nil
 }
+
 func (s *services) GetAllNews() ([]entity.News, error) {
 	news, err := s.repository.GetAllNews()
 	if err != nil {
@@ -316,4 +329,118 @@ func (s *services) GetAllTrendingNews() ([]entity.News, error) {
 		return nil, err
 	}
 	return news, nil
+}
+
+func (s *services) GetAllHighlightNews(authorID uint) ([]entity.News, error) {
+	news, err := s.repository.GetAllHighlightNews(authorID)
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
+}
+
+func (s *services) AddAuthor(req RequestAuthor) (*entity.Author, error) {
+	author := entity.Author{}
+	author.Email = req.Email
+	author.Name = req.Name
+	author.Password = req.Password
+	author.Username = req.Username
+	author.ProfPic = req.ProfPic
+	author.KtpPic = req.KtpPic
+	author.Experienced = req.Experienced
+
+	newAuthor, err := s.repository.AddAuthor(author)
+	return newAuthor, err
+}
+
+func (s *services) IsAuthorExist(id uint) bool {
+	author, _ := s.repository.GetAuthorByID(id)
+	if author == nil {
+		return false
+	}
+	return true
+}
+
+func (s *services) UpdateAuthor(req RequestAuthor) (*entity.Author, error) {
+	author := entity.Author{}
+	author.Email = req.Email
+	author.Name = req.Name
+	author.Password = req.Password
+	author.Username = req.Username
+	author.ProfPic = req.ProfPic
+	author.KtpPic = req.KtpPic
+	author.Experienced = req.Experienced
+
+	newAuthor, err := s.repository.UpdateAuthor(author)
+	if err != nil {
+		return nil, err
+	}
+	return newAuthor, nil
+
+}
+
+func (s *services) DeleteAuthor(id uint) (*entity.Author, error) {
+	author, err := s.repository.DeleteAuthor(id)
+	if err != nil {
+		return nil, err
+	}
+	return author, nil
+}
+
+func (s *services) AddReader(req RequestReader) (*entity.Reader, error) {
+	entity := entity.Reader{}
+	entity.Email = req.Email
+	entity.Name = req.Name
+	entity.Password = req.Password
+	entity.Username = req.Username
+	entity.ProfPic = req.ProfPic
+
+	newEntity, err := s.repository.AddReader(entity)
+	return newEntity, err
+}
+
+func (s *services) GetReader(id uint) (*entity.Reader, error) {
+	entity, err := s.repository.GetReaderByID(id)
+	if err != nil {
+		return nil, err
+	}
+	return entity, nil
+}
+func (s *services) IsReaderExist(id uint) bool {
+	reader, _ := s.repository.GetReaderByID(id)
+	if reader == nil {
+		return false
+	}
+	return true
+}
+
+func (s *services) UpdateReader(req RequestReader) (*entity.Reader, error) {
+	entity := entity.Reader{}
+	entity.Email = req.Email
+	entity.Name = req.Name
+	entity.Password = req.Password
+	entity.Username = req.Username
+	entity.ProfPic = req.ProfPic
+
+	newEntity, err := s.repository.UpdateReader(entity)
+	if err != nil {
+		return nil, err
+	}
+	return newEntity, nil
+
+}
+func (s *services) DeleteReader(id uint) (*entity.Reader, error) {
+	entity, err := s.repository.DeleteReader(id)
+	if err != nil {
+		return nil, err
+	}
+	return entity, nil
+}
+
+func (s *services) GetStatistic() (*entity.Statistic, error) {
+	entity, err := s.repository.GetStatistic()
+	if err != nil {
+		return nil, err
+	}
+	return entity, nil
 }

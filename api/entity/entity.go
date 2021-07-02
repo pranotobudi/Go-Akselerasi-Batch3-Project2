@@ -129,3 +129,9 @@ type Trending struct {
 	ID  int
 	Sum int
 }
+
+type Statistic struct {
+	TotalAuthor int
+	TotalReader int
+	TotalNews   int
+}

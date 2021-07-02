@@ -30,6 +30,14 @@ func GetJwtRole(c echo.Context) string {
 	// id := claims.ID
 	return role
 }
+func GetJwtID(c echo.Context) uint {
+	user := c.Get("user").(*jwt.Token)
+	claims := user.Claims.(*JwtCustomClaims)
+	fmt.Println("==================CLAIMS: %s", claims)
+	// role := claims.Role
+	id := claims.ID
+	return id
+}
 
 func AdminJwtMiddleWare(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {

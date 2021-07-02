@@ -14,24 +14,38 @@ type Repository interface {
 	GetAuthorRegistration(email string) (*entity.AuthorRegistration, error)
 	GetReaderRegistration(email string) (*entity.ReaderRegistration, error)
 	GetAdminRegistration(email string) (*entity.AdminRegistration, error)
-	AddAuthor(author entity.Author) (*entity.Author, error)
-	AddReader(reader entity.Reader) (*entity.Reader, error)
-	AddAdmin(admin entity.Admin) (*entity.Admin, error)
-	GetAuthor(username string) (*entity.Author, error)
-	GetReader(username string) (*entity.Reader, error)
-	GetAdmin(username string) (*entity.Admin, error)
 	ConvertAuthortoUser(author entity.Author) *entity.User
 	ConvertReadertoUser(reader entity.Reader) *entity.User
 	ConvertAdmintoUser(admin entity.Admin) *entity.User
-	AddNews(news entity.News) (*entity.News, error)
 	GetCategory(id uint) (*entity.Category, error)
-	GetAuthorByID(id uint) (*entity.Author, error)
+
+	// CRUD ADMIN
+	AddAdmin(admin entity.Admin) (*entity.Admin, error)
+	GetAdmin(username string) (*entity.Admin, error)
+
+	// CRUD NEWS
 	GetAllNews() ([]entity.News, error)
 	GetNews(id uint) (*entity.News, error)
+	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
+	AddNews(news entity.News) (*entity.News, error)
 	UpdateNews(news entity.News) (*entity.News, error)
 	DeleteNews(id uint) (*entity.News, error)
-	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
 	GetAllTrendingNews() ([]entity.News, error)
+	GetAllHighlightNews(authorID uint) ([]entity.News, error)
+	GetStatistic() (*entity.Statistic, error)
+
+	// CRUD AUTHOR
+	GetAuthor(username string) (*entity.Author, error)
+	GetAuthorByID(id uint) (*entity.Author, error)
+	AddAuthor(author entity.Author) (*entity.Author, error)
+	UpdateAuthor(author entity.Author) (*entity.Author, error)
+	DeleteAuthor(id uint) (*entity.Author, error)
+	// CRUD READER
+	GetReader(username string) (*entity.Reader, error)
+	GetReaderByID(id uint) (*entity.Reader, error)
+	AddReader(reader entity.Reader) (*entity.Reader, error)
+	UpdateReader(reader entity.Reader) (*entity.Reader, error)
+	DeleteReader(id uint) (*entity.Reader, error)
 }
 
 type repository struct {
@@ -98,13 +112,6 @@ func (r *repository) AddAuthor(author entity.Author) (*entity.Author, error) {
 	return &author, nil
 }
 
-func (r *repository) AddReader(reader entity.Reader) (*entity.Reader, error) {
-	err := r.db.Create(&reader).Error
-	if err != nil {
-		return nil, err
-	}
-	return &reader, nil
-}
 func (r *repository) AddAdmin(admin entity.Admin) (*entity.Admin, error) {
 	err := r.db.Create(&admin).Error
 	if err != nil {
@@ -122,15 +129,6 @@ func (r *repository) GetAuthor(username string) (*entity.Author, error) {
 	return &author, nil
 }
 
-func (r *repository) GetReader(username string) (*entity.Reader, error) {
-	var reader entity.Reader
-	err := r.db.Preload("NewsReaders").First(&reader, "username=?", username).Error
-	if err != nil {
-		return nil, err
-	}
-	return &reader, nil
-}
-
 func (r *repository) GetAdmin(username string) (*entity.Admin, error) {
 	var admin entity.Admin
 	err := r.db.First(&admin, "username=?", username).Error
@@ -141,7 +139,7 @@ func (r *repository) GetAdmin(username string) (*entity.Admin, error) {
 }
 func (r *repository) ConvertAuthortoUser(author entity.Author) *entity.User {
 	var user entity.User
-
+	user.ID = author.ID
 	user.Model = author.Model
 	user.Name = author.Name
 	user.Email = author.Email
@@ -154,6 +152,7 @@ func (r *repository) ConvertAuthortoUser(author entity.Author) *entity.User {
 func (r *repository) ConvertReadertoUser(reader entity.Reader) *entity.User {
 	var user entity.User
 
+	user.ID = reader.ID
 	user.Model = reader.Model
 	user.Name = reader.Name
 	user.Email = reader.Email
@@ -167,6 +166,7 @@ func (r *repository) ConvertReadertoUser(reader entity.Reader) *entity.User {
 func (r *repository) ConvertAdmintoUser(admin entity.Admin) *entity.User {
 	var user entity.User
 
+	user.ID = admin.ID
 	user.Model = admin.Model
 	user.Name = admin.Name
 	user.Email = admin.Email
@@ -283,6 +283,34 @@ func (r *repository) GetAllTrendingNews() ([]entity.News, error) {
 	return news, nil
 }
 
+func (r *repository) GetAllHighlightNews(authorID uint) ([]entity.News, error) {
+	statement1 := `
+	SELECT news.id, SUM(total_view) FROM news JOIN news_readers
+	ON news.id = news_readers.news_id
+	WHERE news.author_id= ?
+	GROUP BY news.id
+	`
+
+	var trending []entity.Trending
+	result := r.db.Raw(statement1, authorID).Scan(&trending)
+	// fmt.Printf("\n========= REPOSITORY GETALLTRENDINGNEWS: %+v \n\n", trending)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	maxView := MaximumView(trending)
+	maxTrendingList := GetMaximumTrendingList(trending, maxView)
+
+	var news []entity.News
+	for _, trending := range maxTrendingList {
+		singleNews, _ := r.GetNews(uint(trending.ID))
+		news = append(news, *singleNews)
+	}
+	return news, nil
+}
+
 func MaximumView(trendings []entity.Trending) int {
 	var max int
 	for _, trending := range trendings {
@@ -301,4 +329,114 @@ func GetMaximumTrendingList(trendings []entity.Trending, maxView int) []entity.T
 		}
 	}
 	return maxTrending
+}
+
+func (r *repository) UpdateAuthor(author entity.Author) (*entity.Author, error) {
+	err := r.db.Save(&author).Error
+	if err != nil {
+		return nil, err
+	}
+	return &author, nil
+}
+
+func (r *repository) DeleteAuthor(id uint) (*entity.Author, error) {
+	var author entity.Author
+	err := r.db.Find(&author, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.Delete(&author, "id=?", id).Error
+	// fmt.Printf("================REPOSITORY NEWS: %+v \n\n", news)
+	if err != nil {
+		return nil, err
+	}
+	return &author, nil
+}
+
+func (r *repository) GetReader(username string) (*entity.Reader, error) {
+	var reader entity.Reader
+	err := r.db.Preload("NewsReaders").First(&reader, "username=?", username).Error
+	if err != nil {
+		return nil, err
+	}
+	return &reader, nil
+}
+
+func (r *repository) GetReaderByID(id uint) (*entity.Reader, error) {
+	var reader entity.Reader
+	err := r.db.Preload("NewsReaders").First(&reader, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &reader, nil
+}
+func (r *repository) AddReader(reader entity.Reader) (*entity.Reader, error) {
+	err := r.db.Create(&reader).Error
+	if err != nil {
+		return nil, err
+	}
+	return &reader, nil
+}
+func (r *repository) UpdateReader(reader entity.Reader) (*entity.Reader, error) {
+	err := r.db.Save(&reader).Error
+	if err != nil {
+		return nil, err
+	}
+	return &reader, nil
+}
+func (r *repository) DeleteReader(id uint) (*entity.Reader, error) {
+	var entity entity.Reader
+	err := r.db.Find(&entity, "id=?", id).Error
+	if err != nil {
+		return nil, err
+	}
+	err = r.db.Delete(&entity, "id=?", id).Error
+	// fmt.Printf("================REPOSITORY NEWS: %+v \n\n", news)
+	if err != nil {
+		return nil, err
+	}
+	return &entity, nil
+}
+
+func (r *repository) GetStatistic() (*entity.Statistic, error) {
+	var totalAuthor int
+
+	statement1 := `
+	SELECT SUM(id) FROM authors
+	`
+	result := r.db.Raw(statement1).Scan(&totalAuthor)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var totalReader int
+	statement2 := `
+	SELECT SUM(id) FROM readers
+	`
+	result = r.db.Raw(statement2).Scan(&totalReader)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var totalNews int
+	statement3 := `
+	SELECT SUM(id) FROM news
+	`
+	result = r.db.Raw(statement3).Scan(&totalNews)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var stat = entity.Statistic{}
+	stat.TotalAuthor = totalAuthor
+	stat.TotalReader = totalReader
+	stat.TotalNews = totalNews
+
+	return &stat, nil
 }

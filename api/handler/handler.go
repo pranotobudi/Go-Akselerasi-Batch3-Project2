@@ -9,6 +9,7 @@ import (
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/api/service"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/auth"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
+	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/middleware"
 	"github.com/thanhpk/randstr"
 )
 
@@ -45,7 +46,7 @@ func (h *handler) AuthorRegistrationSendEmail(c echo.Context) error {
 	toEmail := []string{email}
 	helper.SendEmail(toEmail, msg)
 
-	auth_token, err := h.authService.CreateAccessToken("author")
+	auth_token, err := h.authService.CreateAccessToken("author", newAuthorRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -82,7 +83,7 @@ func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
 	toEmail := []string{email}
 	helper.SendEmail(toEmail, msg)
 
-	auth_token, err := h.authService.CreateAccessToken("reader")
+	auth_token, err := h.authService.CreateAccessToken("reader", newReaderRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -119,7 +120,7 @@ func (h *handler) AdminRegistrationSendEmail(c echo.Context) error {
 	toEmail := []string{email}
 	helper.SendEmail(toEmail, msg)
 
-	auth_token, err := h.authService.CreateAccessToken("admin")
+	auth_token, err := h.authService.CreateAccessToken("admin", newAdminRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -191,7 +192,7 @@ func (h *handler) AuthorRegisterConfirmation(c echo.Context) error {
 	// Send response
 
 	// role, _ := h.service.GetRole(newUser.ID)
-	auth_token, err := h.authService.CreateAccessToken("author")
+	auth_token, err := h.authService.CreateAccessToken("author", newAuthor.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -244,7 +245,7 @@ func (h *handler) ReaderRegisterConfirmation(c echo.Context) error {
 	// Send response
 
 	// role, _ := h.service.GetRole(newUser.ID)
-	auth_token, err := h.authService.CreateAccessToken("reader")
+	auth_token, err := h.authService.CreateAccessToken("reader", newReader.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -298,7 +299,7 @@ func (h *handler) AdminRegisterConfirmation(c echo.Context) error {
 	// Send response
 
 	// role, _ := h.service.GetRole(newUser.ID)
-	auth_token, err := h.authService.CreateAccessToken("admin")
+	auth_token, err := h.authService.CreateAccessToken("admin", newAdmin.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -318,14 +319,14 @@ func (h *handler) UserLogin(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 	authUser, err := h.service.AuthUser(*userLogin)
+	fmt.Println("We're IN HERE: USERLOGIN INSIDE: authUser: ", authUser)
 	if err != nil {
-		fmt.Println("We're IN HERE: USERLOGIN INSIDE")
 		response := helper.ResponseFormatter(http.StatusUnauthorized, "error", err.Error(), nil)
 		return c.JSON(http.StatusUnauthorized, response)
 	}
 	// role, _ := h.service.GetRole(authUser.ID)
 
-	auth_token, err := h.authService.CreateAccessToken(authUser.Role)
+	auth_token, err := h.authService.CreateAccessToken(authUser.Role, authUser.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
 
@@ -415,7 +416,7 @@ func (h *handler) UpdateNews(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, response)
 	}
 	isExist := h.service.IsNewsExist(uint(newsID))
-	if isExist == false {
+	if !isExist {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "record not found", nil)
 		return c.JSON(http.StatusBadRequest, response)
 	}
@@ -505,6 +506,218 @@ func (h *handler) GetAllTrendingNews(c echo.Context) error {
 	}
 
 	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+func (h *handler) GetAllHighlightNews(c echo.Context) error {
+	authorID := middleware.GetJwtID(c)
+	fmt.Printf("\n =======Handler GetAllHighLightNews authorID: %+v \n", authorID)
+	news, err := h.service.GetAllHighlightNews(authorID)
+	fmt.Printf("\n ========Handler GetAllHighLightNews: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalNewsData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all highlight news succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+// CRUD AUTHOR
+
+func (h *handler) AddAuthor(c echo.Context) error {
+	author := new(service.RequestAuthor)
+	if err := c.Bind(author); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newAuthor, err := h.service.AddAuthor(*author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully added", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) GetAuthor(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	newAuthor, err := h.service.GetAuthorByID(uint(id))
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully added", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) UpdateAuthor(c echo.Context) error {
+	author := new(service.RequestAuthor)
+	if err := c.Bind(author); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newAuthor, err := h.service.UpdateAuthor(*author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) DeleteAuthor(c echo.Context) error {
+	ID, _ := strconv.Atoi(c.Param("id"))
+
+	author, err := h.service.DeleteAuthor(uint(ID))
+	fmt.Printf("================HANDLER NEWS: %+v \n\n", author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", author.ID)
+	newsData := service.AuthorResponseFormatter(*author, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "delete news successfull", newsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+// CRUD READER
+
+func (h *handler) AddReader(c echo.Context) error {
+	reader := new(service.RequestReader)
+	if err := c.Bind(reader); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newreader, err := h.service.AddReader(*reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, err := h.authService.CreateAccessToken("reader", newreader.ID)
+	data := service.ReaderResponseFormatter(*newreader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "reader successfully added", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) GetReader(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	reader, err := h.service.GetReader(uint(id))
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", reader.ID)
+	data := service.ReaderResponseFormatter(*reader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get reader successful", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) UpdateReader(c echo.Context) error {
+	reader := new(service.RequestReader)
+	if err := c.Bind(reader); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newReader, err := h.service.UpdateReader(*reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("reader", newReader.ID)
+	data := service.ReaderResponseFormatter(*newReader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "reader successfully updated", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) DeleteReader(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	reader, err := h.service.DeleteReader(uint(id))
+	fmt.Printf("================HANDLER NEWS: %+v \n\n", reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("reader", reader.ID)
+	data := service.ReaderResponseFormatter(*reader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "delete reader successfull", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) GetStatistic(c echo.Context) error {
+
+	statistic, err := h.service.GetStatistic()
+	fmt.Printf("================HANDLER NEWS: %+v \n\n", statistic)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	data := service.StatisticResponseFormatter(*statistic)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "delete reader successfull", data)
 
 	return c.JSON(http.StatusOK, response)
 }
