@@ -43,6 +43,9 @@ type Services interface {
 	UpdateReader(req RequestReader) (*entity.Reader, error)
 	DeleteReader(id uint) (*entity.Reader, error)
 	GetStatistic() (*entity.Statistic, error)
+	AddNewsView(newsID uint, readerID uint) error
+	AddComment(req RequestComment) (*entity.NewsComment, error)
+	AddNewsShare(newsID uint, readerID uint) error
 }
 
 type services struct {
@@ -443,4 +446,29 @@ func (s *services) GetStatistic() (*entity.Statistic, error) {
 		return nil, err
 	}
 	return entity, nil
+}
+
+func (s *services) AddNewsView(newsID uint, readerID uint) error {
+	err := s.repository.AddNewsView(newsID, readerID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+func (s *services) AddComment(req RequestComment) (*entity.NewsComment, error) {
+	entity := entity.NewsComment{}
+	entity.ReaderID = req.ReaderID
+	entity.NewsID = req.NewsID
+	entity.Comment = req.Comment
+
+	newEntity, err := s.repository.AddComment(entity)
+	return newEntity, err
+}
+
+func (s *services) AddNewsShare(newsID uint, readerID uint) error {
+	err := s.repository.AddNewsShare(newsID, readerID)
+	if err != nil {
+		return err
+	}
+	return nil
 }

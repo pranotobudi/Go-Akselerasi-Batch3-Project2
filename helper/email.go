@@ -13,6 +13,7 @@ const (
 )
 
 func SendEmail(toAddress []string, message []byte) {
+	// fmt.Println("INSIDE SENDEMAIL: toAddress: ", toAddress)
 	// Message.
 	//   message := []byte("This is a test email message.")
 

@@ -10,42 +10,54 @@ import (
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/auth"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/middleware"
+	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/task"
 	"github.com/thanhpk/randstr"
 )
 
 type handler struct {
 	service     service.Services
 	authService auth.AuthService
+	taskService task.BackgroundTask
 }
 
-func NewHandler(service service.Services, authService auth.AuthService) *handler {
-	return &handler{service, authService}
+func NewHandler(service service.Services, authService auth.AuthService, taskService task.BackgroundTask) *handler {
+	return &handler{service, authService, taskService}
 }
 
 func (h *handler) AuthorRegistrationSendEmail(c echo.Context) error {
+	// Input Binding
 	authorReq := new(service.RequestAuthor)
 	if err := c.Bind(authorReq); err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	//Send Confirmation Email
+	// Add to database
 	regToken := randstr.Hex(16) // generate 128-bit hex string
 	newAuthorRegistration, err := h.service.AddAuthorRegistrationSendEmail(*authorReq, regToken)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "ragistration send email failed", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
+	//Send Confirmation Email
+
+	// email := authorReq.Email
+	// msg := []byte("To: " + email + "\r\n" +
+	// 	"Subject: Registration Confirmation Email from News App!\r\n" +
+	// 	"\r\n" +
+	// 	"This is the email body.\r\n" +
+	// 	"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=author")
+
+	// toEmail := []string{email}
+	// helper.SendEmail(toEmail, msg)
+
+	//Schedule Email Sending
 	email := authorReq.Email
-	msg := []byte("To: " + email + "\r\n" +
-		"Subject: Registration Confirmation Email from News App!\r\n" +
-		"\r\n" +
-		"This is the email body.\r\n" +
-		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=author")
-
 	toEmail := []string{email}
-	helper.SendEmail(toEmail, msg)
+	emailStruct := task.Email{toEmail, "author"}
+	h.taskService.AddEmailQueue(emailStruct)
 
+	// Create JWT token
 	auth_token, err := h.authService.CreateAccessToken("author", newAuthorRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
@@ -60,29 +72,39 @@ func (h *handler) AuthorRegistrationSendEmail(c echo.Context) error {
 }
 
 func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
+	// Input Binding
 	readerReq := new(service.RequestReader)
 	if err := c.Bind(readerReq); err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	//Send Confirmation Email
+	// Add to database
 	regToken := randstr.Hex(16) // generate 128-bit hex string
 	newReaderRegistration, err := h.service.AddReaderRegistrationSendEmail(*readerReq, regToken)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "ragistration send email failed", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
+
+	//Send Confirmation Email
+	// email := readerReq.Email
+	// msg := []byte("To: " + email + "\r\n" +
+	// 	"Subject: Registration Confirmation Email from News App!\r\n" +
+	// 	"\r\n" +
+	// 	"This is the email body.\r\n" +
+	// 	"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=reader")
+
+	// toEmail := []string{email}
+	// helper.SendEmail(toEmail, msg)
+
+	//Schedule Email Sending
 	email := readerReq.Email
-	msg := []byte("To: " + email + "\r\n" +
-		"Subject: Registration Confirmation Email from News App!\r\n" +
-		"\r\n" +
-		"This is the email body.\r\n" +
-		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=reader")
-
 	toEmail := []string{email}
-	helper.SendEmail(toEmail, msg)
+	emailStruct := task.Email{toEmail, "reader"}
+	h.taskService.AddEmailQueue(emailStruct)
 
+	// create JWT token
 	auth_token, err := h.authService.CreateAccessToken("reader", newReaderRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
@@ -97,29 +119,39 @@ func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
 }
 
 func (h *handler) AdminRegistrationSendEmail(c echo.Context) error {
+	// Input Binding
 	adminReq := new(service.RequestAdmin)
 	if err := c.Bind(adminReq); err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
 
-	//Send Confirmation Email
+	// Add to database
 	regToken := randstr.Hex(16) // generate 128-bit hex string
 	newAdminRegistration, err := h.service.AddAdminRegistrationSendEmail(*adminReq, regToken)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "ragistration send email failed", err.Error())
 		return c.JSON(http.StatusBadRequest, response)
 	}
+
+	//Send Confirmation Email
+	// email := adminReq.Email
+	// msg := []byte("To: " + email + "\r\n" +
+	// 	"Subject: Registration Confirmation Email from News App!\r\n" +
+	// 	"\r\n" +
+	// 	"This is the email body.\r\n" +
+	// 	"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=admin")
+
+	// toEmail := []string{email}
+	// helper.SendEmail(toEmail, msg)
+
+	//Schedule Email Sending
 	email := adminReq.Email
-	msg := []byte("To: " + email + "\r\n" +
-		"Subject: Registration Confirmation Email from News App!\r\n" +
-		"\r\n" +
-		"This is the email body.\r\n" +
-		"http://localhost:8080/api/register/confirmation?email=" + email + "&token=" + regToken + "&role=admin")
-
 	toEmail := []string{email}
-	helper.SendEmail(toEmail, msg)
+	emailStruct := task.Email{toEmail, "admin"}
+	h.taskService.AddEmailQueue(emailStruct)
 
+	//Create JWT Token
 	auth_token, err := h.authService.CreateAccessToken("admin", newAdminRegistration.ID)
 	if err != nil {
 		response := helper.ResponseFormatter(http.StatusInternalServerError, "error", err.Error(), nil)
@@ -398,6 +430,18 @@ func (h *handler) GetNews(c echo.Context) error {
 
 		return c.JSON(http.StatusBadRequest, response)
 	}
+
+	// Add Total View
+	readerID := middleware.GetJwtID(c)
+	err = h.service.AddNewsView(uint(newsID), readerID)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
 	author, _ := h.service.GetAuthorByID(uint(news.AuthorID))
 	category, _ := h.service.GetCategory(uint(news.CategoryID))
 
@@ -645,8 +689,8 @@ func (h *handler) AddReader(c echo.Context) error {
 }
 
 func (h *handler) GetReader(c echo.Context) error {
-	id, _ := strconv.Atoi(c.Param("id"))
-	reader, err := h.service.GetReader(uint(id))
+	newsID, _ := strconv.Atoi(c.Param("id"))
+	reader, err := h.service.GetReader(uint(newsID))
 	if err != nil {
 		errorFormatter := helper.ErrorFormatter(err)
 		errorMessage := helper.M{"errors": errorFormatter}
@@ -718,6 +762,46 @@ func (h *handler) GetStatistic(c echo.Context) error {
 
 	data := service.StatisticResponseFormatter(*statistic)
 	response := helper.ResponseFormatter(http.StatusOK, "success", "delete reader successfull", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) AddComment(c echo.Context) error {
+	comment := new(service.RequestComment)
+	if err := c.Bind(comment); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	newComment, err := h.service.AddComment(*comment)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	data := service.CommentResponseFormatter(*newComment)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "comment successfully added", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) AddNewsShare(c echo.Context) error {
+	newsID, _ := strconv.Atoi(c.Param("id"))
+	readerID := middleware.GetJwtID(c)
+	err := h.service.AddNewsShare(uint(newsID), readerID)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	data := ""
+	response := helper.ResponseFormatter(http.StatusOK, "success", "add share successfull", data)
 
 	return c.JSON(http.StatusOK, response)
 }

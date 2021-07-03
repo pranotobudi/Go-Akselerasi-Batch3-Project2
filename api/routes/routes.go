@@ -1,6 +1,7 @@
 package routes
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/api/handler"
@@ -10,6 +11,7 @@ import (
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/database"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/middleware"
+	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/task"
 
 	"github.com/labstack/echo"
 )
@@ -25,7 +27,9 @@ func (r NewsRoutes) Route() []helper.Route {
 	repo := repository.NewRepository(db)
 	newsService := service.NewServices(repo)
 	authService := auth.NewAuthService()
-	newsHandler := handler.NewHandler(newsService, authService)
+	taskService := task.NewBackgroundTask()
+	taskService.InitEmailSchedulers()
+	newsHandler := handler.NewHandler(newsService, authService, taskService)
 
 	return []helper.Route{
 		{
@@ -78,10 +82,10 @@ func (r NewsRoutes) Route() []helper.Route {
 			Method:  echo.GET,
 			Path:    "/news/:id",
 			Handler: newsHandler.GetNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				// middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
@@ -128,6 +132,34 @@ func (r NewsRoutes) Route() []helper.Route {
 				middleware.JwtMiddleWare(),
 				// middleware.RoleAccessMiddleware("author"),
 			},
+		},
+
+		{
+			Method:  echo.GET,
+			Path:    "/news/:id/share",
+			Handler: newsHandler.AddNewsShare,
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				// middleware.RoleAccessMiddleware("author"),
+			},
+		},
+		{
+			Method:  echo.POST,
+			Path:    "/news/:id/comment",
+			Handler: newsHandler.AddComment,
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				// middleware.RoleAccessMiddleware("admin"),
+			},
+		},
+		{
+			Method:  echo.GET,
+			Path:    "/news/statistic",
+			Handler: newsHandler.GetStatistic,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 
 		// CRUD AUTHOR
@@ -205,34 +237,6 @@ func (r NewsRoutes) Route() []helper.Route {
 			// 	middleware.RoleAccessMiddleware("admin"),
 			// },
 		},
-
-		{
-			Method: echo.POST,
-			Path:   "/news/share",
-			// Handler: newsHandler.AddNewsShare,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("author"),
-			},
-		},
-		{
-			Method: echo.POST,
-			Path:   "/news/comment",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
-		},
-		{
-			Method:  echo.GET,
-			Path:    "/news/statistic",
-			Handler: newsHandler.GetStatistic,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
-		},
 		{
 			Method: echo.PUT,
 			Path:   "/users/password",
@@ -252,4 +256,8 @@ func (r NewsRoutes) Route() []helper.Route {
 			},
 		},
 	}
+}
+
+func JustSchedule() {
+	fmt.Println("Bismillah")
 }

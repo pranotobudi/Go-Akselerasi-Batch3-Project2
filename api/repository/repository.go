@@ -33,6 +33,8 @@ type Repository interface {
 	GetAllTrendingNews() ([]entity.News, error)
 	GetAllHighlightNews(authorID uint) ([]entity.News, error)
 	GetStatistic() (*entity.Statistic, error)
+	AddNewsView(newsID uint, readerID uint) error
+	AddNewsShare(newsID uint, readerID uint) error
 
 	// CRUD AUTHOR
 	GetAuthor(username string) (*entity.Author, error)
@@ -46,6 +48,8 @@ type Repository interface {
 	AddReader(reader entity.Reader) (*entity.Reader, error)
 	UpdateReader(reader entity.Reader) (*entity.Reader, error)
 	DeleteReader(id uint) (*entity.Reader, error)
+
+	AddComment(comment entity.NewsComment) (*entity.NewsComment, error)
 }
 
 type repository struct {
@@ -370,6 +374,7 @@ func (r *repository) GetReaderByID(id uint) (*entity.Reader, error) {
 	}
 	return &reader, nil
 }
+
 func (r *repository) AddReader(reader entity.Reader) (*entity.Reader, error) {
 	err := r.db.Create(&reader).Error
 	if err != nil {
@@ -439,4 +444,77 @@ func (r *repository) GetStatistic() (*entity.Statistic, error) {
 	stat.TotalNews = totalNews
 
 	return &stat, nil
+}
+
+func (r *repository) AddNewsView(newsID uint, readerID uint) error {
+	var totalLike int
+
+	statement1 := `
+	SELECT total_like FROM news_readers 
+	WHERE news_id = ? AND reader_id = ?
+	`
+	result := r.db.Raw(statement1, newsID, readerID).Scan(&totalLike)
+	if result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected < 1 {
+		return fmt.Errorf("table is empty")
+	}
+
+	if totalLike == 0 {
+		statement2 := `
+		UPDATE news_readers
+		SET total_like = 1
+		WHERE news_id = ? AND reader_id = ?
+		`
+		result := r.db.Raw(statement2, newsID, readerID)
+		if result.Error != nil {
+			return result.Error
+		} else if result.RowsAffected < 1 {
+			return fmt.Errorf("total_view update failed")
+		}
+	} else {
+		return fmt.Errorf("only 1 like allowed for 1 reader")
+	}
+	return nil
+
+}
+
+func (r *repository) AddComment(comment entity.NewsComment) (*entity.NewsComment, error) {
+	err := r.db.Create(&comment).Error
+	if err != nil {
+		return nil, err
+	}
+	return &comment, nil
+}
+
+func (r *repository) AddNewsShare(newsID uint, readerID uint) error {
+	var totalShare int
+
+	statement1 := `
+	SELECT total_share FROM news_readers 
+	WHERE news_id = ? AND reader_id = ?
+	`
+	result := r.db.Raw(statement1, newsID, readerID).Scan(&totalShare)
+	if result.Error != nil {
+		return result.Error
+	} else if result.RowsAffected < 1 {
+		return fmt.Errorf("table is empty")
+	}
+
+	if totalShare == 0 {
+		statement2 := `
+		UPDATE news_readers
+		SET total_share = 1
+		WHERE news_id = ? AND reader_id = ?
+		`
+		result := r.db.Raw(statement2, newsID, readerID)
+		if result.Error != nil {
+			return result.Error
+		} else if result.RowsAffected < 1 {
+			return fmt.Errorf("total_view update failed")
+		}
+	} else {
+		return fmt.Errorf("only 1 share allowed for 1 reader")
+	}
+	return nil
 }

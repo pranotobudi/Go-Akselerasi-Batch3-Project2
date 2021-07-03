@@ -37,3 +37,9 @@ type RequestNews struct {
 	Content    string `json:"content"`
 	ImageUrl   string `json:"image_url"`
 }
+
+type RequestComment struct {
+	ReaderID int    `json:"reader_id"`
+	NewsID   int    `json:"news_id"`
+	Comment  string `json:"comment"`
+}
