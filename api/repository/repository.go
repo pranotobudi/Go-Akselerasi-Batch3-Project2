@@ -25,8 +25,10 @@ type Repository interface {
 
 	// CRUD NEWS
 	GetAllNews() ([]entity.News, error)
+	GetAllNewsByCategory() ([]entity.News, error)
 	GetNews(id uint) (*entity.News, error)
 	GetNewsByCategoryID(categoryID uint) ([]entity.News, error)
+	GetAllNewsByTrending() ([]entity.News, error)
 	AddNews(news entity.News) (*entity.News, error)
 	UpdateNews(news entity.News) (*entity.News, error)
 	DeleteNews(id uint) (*entity.News, error)
@@ -211,11 +213,45 @@ func (r *repository) GetAuthorByID(id uint) (*entity.Author, error) {
 
 func (r *repository) GetAllNews() ([]entity.News, error) {
 	var news []entity.News
-	result := r.db.Preload("NewsReaders").Preload("NewsComments").Find(&news)
+	result := r.db.Preload("NewsReaders").Preload("NewsComments").Order("created_at desc").Find(&news)
 	if result.Error != nil {
 		return news, result.Error
 	} else if result.RowsAffected < 1 {
 		return news, fmt.Errorf("table is empty")
+	}
+	return news, nil
+}
+func (r *repository) GetAllNewsByCategory() ([]entity.News, error) {
+	var news []entity.News
+	result := r.db.Preload("NewsReaders").Preload("NewsComments").Order("category_id asc").Find(&news)
+	if result.Error != nil {
+		return news, result.Error
+	} else if result.RowsAffected < 1 {
+		return news, fmt.Errorf("table is empty")
+	}
+	return news, nil
+}
+func (r *repository) GetAllNewsByTrending() ([]entity.News, error) {
+	statement1 := `
+	SELECT news.id, SUM(total_view) FROM news JOIN news_readers
+	ON news.id = news_readers.news_id
+	GROUP BY news.id
+	ORDER BY SUM(total_view) desc
+	`
+
+	var sortedTrendingList []entity.Trending
+	result := r.db.Raw(statement1).Scan(&sortedTrendingList)
+	// fmt.Printf("\n========= REPOSITORY GETALLTRENDINGNEWS: %+v \n\n", trending)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var news []entity.News
+	for _, trending := range sortedTrendingList {
+		singleNews, _ := r.GetNews(uint(trending.ID))
+		news = append(news, *singleNews)
 	}
 	return news, nil
 }

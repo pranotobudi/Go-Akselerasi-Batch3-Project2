@@ -419,6 +419,55 @@ func (h *handler) GetAllNews(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+func (h *handler) GetAllNewsByCategory(c echo.Context) error {
+	news, err := h.service.GetAllNewsByCategory()
+	fmt.Printf("\n Handler GetAllNews: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalNewsData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news sort by category succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+func (h *handler) GetAllNewsByTrending(c echo.Context) error {
+	news, err := h.service.GetAllNewsByTrending()
+	fmt.Printf("\n Handler GetAllNews: %+v \n", news)
+
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+	var finalNewsData []service.ResponseNews
+	for _, singleNews := range news {
+		author, _ := h.service.GetAuthorByID(uint(singleNews.AuthorID))
+		category, _ := h.service.GetCategory(uint(singleNews.CategoryID))
+
+		newsData := service.NewsResponseFormatter(singleNews, *author, *category)
+		finalNewsData = append(finalNewsData, newsData)
+	}
+
+	response := helper.ResponseFormatter(http.StatusOK, "success", "get all news sort by trending succeeded", finalNewsData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
 func (h *handler) GetNews(c echo.Context) error {
 	newsID, _ := strconv.Atoi(c.Param("id"))
 

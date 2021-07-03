@@ -80,6 +80,24 @@ func (r NewsRoutes) Route() []helper.Route {
 		},
 		{
 			Method:  echo.GET,
+			Path:    "/news/sort/category",
+			Handler: newsHandler.GetAllNewsByCategory,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
+		},
+		{
+			Method:  echo.GET,
+			Path:    "/news/sort/trending",
+			Handler: newsHandler.GetAllNewsByTrending,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
+		},
+		{
+			Method:  echo.GET,
 			Path:    "/news/:id",
 			Handler: newsHandler.GetNews,
 			Middleware: []echo.MiddlewareFunc{

@@ -26,6 +26,8 @@ type Services interface {
 	GetCategory(id uint) (*entity.Category, error)
 	GetAuthorByID(id uint) (*entity.Author, error)
 	GetAllNews() ([]entity.News, error)
+	GetAllNewsByCategory() ([]entity.News, error)
+	GetAllNewsByTrending() ([]entity.News, error)
 	GetNews(newsID uint) (*entity.News, error)
 	IsNewsExist(id uint) bool
 	UpdateNews(req RequestNews) (*entity.News, error)
@@ -275,6 +277,20 @@ func (s *services) GetAuthorByID(id uint) (*entity.Author, error) {
 
 func (s *services) GetAllNews() ([]entity.News, error) {
 	news, err := s.repository.GetAllNews()
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
+}
+func (s *services) GetAllNewsByCategory() ([]entity.News, error) {
+	news, err := s.repository.GetAllNewsByCategory()
+	if err != nil {
+		return nil, err
+	}
+	return news, nil
+}
+func (s *services) GetAllNewsByTrending() ([]entity.News, error) {
+	news, err := s.repository.GetAllNewsByTrending()
 	if err != nil {
 		return nil, err
 	}
