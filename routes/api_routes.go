@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/api/routes"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
 )

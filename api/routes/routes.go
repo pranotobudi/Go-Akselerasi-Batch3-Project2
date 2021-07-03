@@ -13,7 +13,7 @@ import (
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/middleware"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/task"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 )
 
 type NewsRoutes struct{}
@@ -64,91 +64,91 @@ func (r NewsRoutes) Route() []helper.Route {
 			Method:  echo.POST,
 			Path:    "/news",
 			Handler: newsHandler.AddNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news",
 			Handler: newsHandler.GetAllNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/sort/category",
 			Handler: newsHandler.GetAllNewsByCategory,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/sort/trending",
 			Handler: newsHandler.GetAllNewsByTrending,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/:id",
 			Handler: newsHandler.GetNews,
 			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				// middleware.RoleAccessMiddleware("admin"),
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
 			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/news/:id",
 			Handler: newsHandler.UpdateNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 		{
 			Method:  echo.DELETE,
 			Path:    "/news/:id",
 			Handler: newsHandler.DeleteNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 
 		{
 			Method:  echo.GET,
 			Path:    "/news/category/:id",
 			Handler: newsHandler.GetNewsByCategoryID,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/trending",
 			Handler: newsHandler.GetAllTrendingNews,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin", "reader"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/highlight",
 			Handler: newsHandler.GetAllHighlightNews,
 			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				// middleware.RoleAccessMiddleware("author"),
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader", "author"),
 			},
 		},
 
@@ -157,8 +157,8 @@ func (r NewsRoutes) Route() []helper.Route {
 			Path:    "/news/:id/share",
 			Handler: newsHandler.AddNewsShare,
 			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				// middleware.RoleAccessMiddleware("author"),
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader"),
 			},
 		},
 		{
@@ -166,18 +166,18 @@ func (r NewsRoutes) Route() []helper.Route {
 			Path:    "/news/:id/comment",
 			Handler: newsHandler.AddComment,
 			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				// middleware.RoleAccessMiddleware("admin"),
+				middleware.JwtMiddleWareWithRedirect(),
+				middleware.RoleAccessMiddleware("admin", "reader"),
 			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/news/statistic",
 			Handler: newsHandler.GetStatistic,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 
 		// CRUD AUTHOR
@@ -185,65 +185,65 @@ func (r NewsRoutes) Route() []helper.Route {
 			Method:  echo.POST,
 			Path:    "/author",
 			Handler: newsHandler.AddAuthor,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/author/:id",
 			Handler: newsHandler.GetAuthor,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/author/:id",
 			Handler: newsHandler.UpdateAuthor,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.DELETE,
 			Path:    "/author/:id",
 			Handler: newsHandler.DeleteAuthor,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/author/:id/password",
 			Handler: newsHandler.UpdateAuthorPassword,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/author/:id/profile",
 			Handler: newsHandler.UpdateAuthorProfile,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	// middleware.JwtMiddleWare(),
-			// 	// middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 
 		{
 			Method:  echo.GET,
 			Path:    "/author/news/:id",
 			Handler: newsHandler.GetAuthorNewsStatistic,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	// middleware.JwtMiddleWare(),
-			// 	// middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "author"),
+			},
 		},
 
 		// CRUD READER
@@ -251,55 +251,55 @@ func (r NewsRoutes) Route() []helper.Route {
 			Method:  echo.POST,
 			Path:    "/reader",
 			Handler: newsHandler.AddReader,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.GET,
 			Path:    "/reader/:id",
 			Handler: newsHandler.GetReader,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/reader/:id",
 			Handler: newsHandler.UpdateReader,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.DELETE,
 			Path:    "/reader/:id",
 			Handler: newsHandler.DeleteReader,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/reader/:id/password",
 			Handler: newsHandler.UpdateReaderPassword,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	middleware.JwtMiddleWare(),
-			// 	middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin"),
+			},
 		},
 		{
 			Method:  echo.PUT,
 			Path:    "/reader/:id/profile",
 			Handler: newsHandler.UpdateReaderProfile,
-			// Middleware: []echo.MiddlewareFunc{
-			// 	// middleware.JwtMiddleWare(),
-			// 	// middleware.RoleAccessMiddleware("admin"),
-			// },
+			Middleware: []echo.MiddlewareFunc{
+				middleware.JwtMiddleWare(),
+				middleware.RoleAccessMiddleware("admin", "reader"),
+			},
 		},
 	}
 }

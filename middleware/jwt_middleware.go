@@ -6,8 +6,8 @@ import (
 	"os"
 
 	"github.com/dgrijalva/jwt-go"
-	"github.com/labstack/echo"
-	"github.com/labstack/echo/middleware"
+	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 )
 
 type JwtCustomClaims struct {
@@ -22,6 +22,23 @@ func JwtMiddleWare() echo.MiddlewareFunc {
 		Claims:     &JwtCustomClaims{},
 		SigningKey: []byte(key),
 	})
+}
+
+func JwtMiddleWareWithRedirect() echo.MiddlewareFunc {
+	key := os.Getenv("JWT_SECRET_KEY")
+	return middleware.JWTWithConfig(middleware.JWTConfig{
+		Claims:                  &JwtCustomClaims{},
+		SigningKey:              []byte(key),
+		ErrorHandlerWithContext: RedirectToLogin,
+	})
+}
+func RedirectToLogin(err error, c echo.Context) error {
+	// response := helper.ResponseFormatter(http.StatusBadRequest, "error", "please login or register first", err.Error())
+
+	return c.Redirect(http.StatusSeeOther, "/api/login")
+
+	// return c.JSON(http.StatusBadRequest, response)
+
 }
 func GetJwtRole(c echo.Context) string {
 	user := c.Get("user").(*jwt.Token)

@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/api/service"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/auth"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
