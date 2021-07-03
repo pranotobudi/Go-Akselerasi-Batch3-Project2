@@ -247,13 +247,13 @@ func (r NewsRoutes) Route() []helper.Route {
 			},
 		},
 		{
-			Method: echo.PUT,
-			Path:   "/users/profile",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.PUT,
+			Path:    "/author/:id/profile",
+			Handler: newsHandler.UpdateAuthorProfile,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	// middleware.JwtMiddleWare(),
+			// 	// middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 	}
 }

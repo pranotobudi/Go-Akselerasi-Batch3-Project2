@@ -336,7 +336,17 @@ func GetMaximumTrendingList(trendings []entity.Trending, maxView int) []entity.T
 }
 
 func (r *repository) UpdateAuthor(author entity.Author) (*entity.Author, error) {
-	err := r.db.Save(&author).Error
+	oldAuthor, _ := r.GetAuthorByID(author.ID)
+	err := r.db.First(&oldAuthor).Error
+	oldAuthor.Name = author.Name
+	oldAuthor.Email = author.Email
+	oldAuthor.Password = author.Password
+	oldAuthor.Username = author.Username
+	oldAuthor.Experienced = author.Experienced
+	oldAuthor.ProfPic = author.ProfPic
+	oldAuthor.KtpPic = author.KtpPic
+
+	err = r.db.Save(&oldAuthor).Error
 	if err != nil {
 		return nil, err
 	}
@@ -383,7 +393,15 @@ func (r *repository) AddReader(reader entity.Reader) (*entity.Reader, error) {
 	return &reader, nil
 }
 func (r *repository) UpdateReader(reader entity.Reader) (*entity.Reader, error) {
-	err := r.db.Save(&reader).Error
+	oldReader, _ := r.GetReaderByID(reader.ID)
+	err := r.db.First(&oldReader).Error
+	oldReader.Name = reader.Name
+	oldReader.Email = reader.Email
+	oldReader.Password = reader.Password
+	oldReader.Username = reader.Username
+	oldReader.ProfPic = reader.ProfPic
+
+	err = r.db.Save(&oldReader).Error
 	if err != nil {
 		return nil, err
 	}

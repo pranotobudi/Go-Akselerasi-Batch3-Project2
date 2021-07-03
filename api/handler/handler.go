@@ -805,3 +805,50 @@ func (h *handler) AddNewsShare(c echo.Context) error {
 
 	return c.JSON(http.StatusOK, response)
 }
+
+func (h *handler) UpdateAuthorProfile(c echo.Context) error {
+	authorID, _ := strconv.Atoi(c.Param("id"))
+	author, _ := h.service.GetAuthorByID(uint(authorID))
+
+	name := c.FormValue("name")
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	username := c.FormValue("username")
+	experienced, _ := strconv.ParseBool(c.FormValue("experienced"))
+	profPicHeader, _ := c.FormFile("prof_pic")
+	ktpPicHeader, _ := c.FormFile("ktp_pic")
+	// if err != nil {
+	// 	return err
+	// }
+	profPicfile, _ := profPicHeader.Open()
+	ktpPicfile, _ := ktpPicHeader.Open()
+	// if err != nil {
+	// 	return err
+	// }
+	defer profPicfile.Close()
+	profPicPath, _ := helper.UploadFile(profPicfile, profPicHeader.Filename)
+	ktpPicPath, _ := helper.UploadFile(ktpPicfile, profPicHeader.Filename)
+
+	author.Name = name
+	author.Email = email
+	author.Password = password
+	author.Username = username
+	author.Experienced = experienced
+	author.ProfPic = profPicPath
+	author.KtpPic = ktpPicPath
+
+	newAuthor, err := h.service.UpdateAuthorProfile(*author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}

@@ -37,6 +37,7 @@ type Services interface {
 	IsAuthorExist(id uint) bool
 	UpdateAuthor(req RequestAuthor) (*entity.Author, error)
 	DeleteAuthor(id uint) (*entity.Author, error)
+	UpdateAuthorProfile(author entity.Author) (*entity.Author, error)
 	AddReader(req RequestReader) (*entity.Reader, error)
 	GetReader(id uint) (*entity.Reader, error)
 	IsReaderExist(id uint) bool
@@ -471,4 +472,13 @@ func (s *services) AddNewsShare(newsID uint, readerID uint) error {
 		return err
 	}
 	return nil
+}
+
+func (s *services) UpdateAuthorProfile(author entity.Author) (*entity.Author, error) {
+	newAuthor, err := s.repository.UpdateAuthor(author)
+	if err != nil {
+		return nil, err
+	}
+	return newAuthor, nil
+
 }
