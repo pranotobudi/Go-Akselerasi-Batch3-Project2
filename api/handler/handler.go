@@ -766,6 +766,25 @@ func (h *handler) GetStatistic(c echo.Context) error {
 	return c.JSON(http.StatusOK, response)
 }
 
+func (h *handler) GetAuthorNewsStatistic(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+
+	statistic, err := h.service.GetNewsStatistic(uint(id))
+	fmt.Printf("================HANDLER NEWS: %+v \n\n", statistic)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	data := service.NewsStatisticResponseFormatter(*statistic)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "delete reader successfull", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
 func (h *handler) AddComment(c echo.Context) error {
 	comment := new(service.RequestComment)
 	if err := c.Bind(comment); err != nil {
@@ -849,6 +868,109 @@ func (h *handler) UpdateAuthorProfile(c echo.Context) error {
 	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
 	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
 	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) UpdateAuthorPassword(c echo.Context) error {
+	authorID, _ := strconv.Atoi(c.Param("id"))
+	author, _ := h.service.GetAuthorByID(uint(authorID))
+	type Password struct {
+		Password string `json:"password"`
+	}
+	password := new(Password)
+	// password := c.FormValue("password")
+	if err := c.Bind(password); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	author.Password = helper.GeneratePassword(password.Password)
+
+	newAuthor, err := h.service.UpdateAuthorProfile(*author)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newAuthor.ID)
+	authorData := service.AuthorResponseFormatter(*newAuthor, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", authorData)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) UpdateReaderProfile(c echo.Context) error {
+	readerID, _ := strconv.Atoi(c.Param("id"))
+	reader, _ := h.service.GetReader(uint(readerID))
+
+	name := c.FormValue("name")
+	email := c.FormValue("email")
+	password := c.FormValue("password")
+	username := c.FormValue("username")
+	profPicHeader, _ := c.FormFile("prof_pic")
+	// if err != nil {
+	// 	return err
+	// }
+	profPicfile, _ := profPicHeader.Open()
+	// if err != nil {
+	// 	return err
+	// }
+	defer profPicfile.Close()
+	profPicPath, _ := helper.UploadFile(profPicfile, profPicHeader.Filename)
+
+	reader.Name = name
+	reader.Email = email
+	reader.Password = password
+	reader.Username = username
+	reader.ProfPic = profPicPath
+
+	newReader, err := h.service.UpdateReaderProfile(*reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("reader", newReader.ID)
+	data := service.ReaderResponseFormatter(*newReader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", data)
+
+	return c.JSON(http.StatusOK, response)
+}
+
+func (h *handler) UpdateReaderPassword(c echo.Context) error {
+	readerID, _ := strconv.Atoi(c.Param("id"))
+	reader, _ := h.service.GetReader(uint(readerID))
+	type Password struct {
+		Password string `json:"password"`
+	}
+	password := new(Password)
+	// password := c.FormValue("password")
+	if err := c.Bind(password); err != nil {
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", "invalid request", err.Error())
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	reader.Password = helper.GeneratePassword(password.Password)
+
+	newReader, err := h.service.UpdateReaderProfile(*reader)
+	if err != nil {
+		errorFormatter := helper.ErrorFormatter(err)
+		errorMessage := helper.M{"errors": errorFormatter}
+		response := helper.ResponseFormatter(http.StatusBadRequest, "error", errorMessage, nil)
+
+		return c.JSON(http.StatusBadRequest, response)
+	}
+
+	auth_token, _ := h.authService.CreateAccessToken("author", newReader.ID)
+	data := service.ReaderResponseFormatter(*newReader, auth_token)
+	response := helper.ResponseFormatter(http.StatusOK, "success", "author successfully updated", data)
 
 	return c.JSON(http.StatusOK, response)
 }

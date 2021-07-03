@@ -42,8 +42,10 @@ type Services interface {
 	GetReader(id uint) (*entity.Reader, error)
 	IsReaderExist(id uint) bool
 	UpdateReader(req RequestReader) (*entity.Reader, error)
+	UpdateReaderProfile(reader entity.Reader) (*entity.Reader, error)
 	DeleteReader(id uint) (*entity.Reader, error)
 	GetStatistic() (*entity.Statistic, error)
+	GetNewsStatistic(id uint) (*entity.NewsStatistic, error)
 	AddNewsView(newsID uint, readerID uint) error
 	AddComment(req RequestComment) (*entity.NewsComment, error)
 	AddNewsShare(newsID uint, readerID uint) error
@@ -449,6 +451,14 @@ func (s *services) GetStatistic() (*entity.Statistic, error) {
 	return entity, nil
 }
 
+func (s *services) GetNewsStatistic(id uint) (*entity.NewsStatistic, error) {
+	entity, err := s.repository.GetNewsStatistic(id)
+	if err != nil {
+		return nil, err
+	}
+	return entity, nil
+}
+
 func (s *services) AddNewsView(newsID uint, readerID uint) error {
 	err := s.repository.AddNewsView(newsID, readerID)
 	if err != nil {
@@ -480,5 +490,14 @@ func (s *services) UpdateAuthorProfile(author entity.Author) (*entity.Author, er
 		return nil, err
 	}
 	return newAuthor, nil
+
+}
+
+func (s *services) UpdateReaderProfile(reader entity.Reader) (*entity.Reader, error) {
+	newReader, err := s.repository.UpdateReader(reader)
+	if err != nil {
+		return nil, err
+	}
+	return newReader, nil
 
 }

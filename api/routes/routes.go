@@ -199,6 +199,34 @@ func (r NewsRoutes) Route() []helper.Route {
 			// 	middleware.RoleAccessMiddleware("admin"),
 			// },
 		},
+		{
+			Method:  echo.PUT,
+			Path:    "/author/:id/password",
+			Handler: newsHandler.UpdateAuthorPassword,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
+		},
+		{
+			Method:  echo.PUT,
+			Path:    "/author/:id/profile",
+			Handler: newsHandler.UpdateAuthorProfile,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	// middleware.JwtMiddleWare(),
+			// 	// middleware.RoleAccessMiddleware("admin"),
+			// },
+		},
+
+		{
+			Method:  echo.GET,
+			Path:    "/author/news/:id",
+			Handler: newsHandler.GetAuthorNewsStatistic,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	// middleware.JwtMiddleWare(),
+			// 	// middleware.RoleAccessMiddleware("admin"),
+			// },
+		},
 
 		// CRUD READER
 		{
@@ -238,18 +266,18 @@ func (r NewsRoutes) Route() []helper.Route {
 			// },
 		},
 		{
-			Method: echo.PUT,
-			Path:   "/users/password",
-			// Handler: userHandler.GetAllUsers,
-			Middleware: []echo.MiddlewareFunc{
-				middleware.JwtMiddleWare(),
-				middleware.RoleAccessMiddleware("admin"),
-			},
+			Method:  echo.PUT,
+			Path:    "/reader/:id/password",
+			Handler: newsHandler.UpdateReaderPassword,
+			// Middleware: []echo.MiddlewareFunc{
+			// 	middleware.JwtMiddleWare(),
+			// 	middleware.RoleAccessMiddleware("admin"),
+			// },
 		},
 		{
 			Method:  echo.PUT,
-			Path:    "/author/:id/profile",
-			Handler: newsHandler.UpdateAuthorProfile,
+			Path:    "/reader/:id/profile",
+			Handler: newsHandler.UpdateReaderProfile,
 			// Middleware: []echo.MiddlewareFunc{
 			// 	// middleware.JwtMiddleWare(),
 			// 	// middleware.RoleAccessMiddleware("admin"),

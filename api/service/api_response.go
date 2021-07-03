@@ -89,6 +89,11 @@ type ResponseStatistic struct {
 	TotalReader int `json:"total_reader`
 	TotalNews   int `json:total_news`
 }
+type ResponseNewsStatistic struct {
+	TotalShare   int `json:"total_share`
+	TotalReader  int `json:"total_reader`
+	TotalComment int `json:total_comment`
+}
 
 type ResponseComment struct {
 	ReaderID int    `json:"reader_id`
@@ -213,6 +218,14 @@ func StatisticResponseFormatter(stat entity.Statistic) ResponseStatistic {
 		TotalAuthor: stat.TotalAuthor,
 		TotalReader: stat.TotalReader,
 		TotalNews:   stat.TotalNews,
+	}
+	return formatter
+}
+func NewsStatisticResponseFormatter(stat entity.NewsStatistic) ResponseNewsStatistic {
+	formatter := ResponseNewsStatistic{
+		TotalShare:   stat.TotalShare,
+		TotalReader:  stat.TotalReader,
+		TotalComment: stat.TotalComment,
 	}
 	return formatter
 }

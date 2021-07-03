@@ -42,6 +42,8 @@ type Repository interface {
 	AddAuthor(author entity.Author) (*entity.Author, error)
 	UpdateAuthor(author entity.Author) (*entity.Author, error)
 	DeleteAuthor(id uint) (*entity.Author, error)
+	GetNewsStatistic(newsID uint) (*entity.NewsStatistic, error)
+
 	// CRUD READER
 	GetReader(username string) (*entity.Reader, error)
 	GetReaderByID(id uint) (*entity.Reader, error)
@@ -460,6 +462,52 @@ func (r *repository) GetStatistic() (*entity.Statistic, error) {
 	stat.TotalAuthor = totalAuthor
 	stat.TotalReader = totalReader
 	stat.TotalNews = totalNews
+
+	return &stat, nil
+}
+
+func (r *repository) GetNewsStatistic(newsID uint) (*entity.NewsStatistic, error) {
+	var totalShare int
+
+	statement1 := `
+	SELECT SUM(total_share) FROM news_readers 
+	WHERE news_id=?
+	`
+	result := r.db.Raw(statement1, newsID).Scan(&totalShare)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var totalReader int
+	statement2 := `
+	SELECT SUM(total_view) FROM news_readers 
+	WHERE news_id=?
+	`
+	result = r.db.Raw(statement2, newsID).Scan(&totalReader)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var totalComment int
+	statement3 := `
+	SELECT COUNT(id) FROM news_comments 
+	WHERE news_id=?
+	`
+	result = r.db.Raw(statement3, newsID).Scan(&totalComment)
+	if result.Error != nil {
+		return nil, result.Error
+	} else if result.RowsAffected < 1 {
+		return nil, fmt.Errorf("table is empty")
+	}
+
+	var stat = entity.NewsStatistic{}
+	stat.TotalShare = totalShare
+	stat.TotalReader = totalReader
+	stat.TotalComment = totalComment
 
 	return &stat, nil
 }

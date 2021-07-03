@@ -135,3 +135,9 @@ type Statistic struct {
 	TotalReader int
 	TotalNews   int
 }
+
+type NewsStatistic struct {
+	TotalReader  int
+	TotalComment int
+	TotalShare   int
+}
