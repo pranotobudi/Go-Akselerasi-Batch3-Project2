@@ -883,19 +883,26 @@ func (h *handler) UpdateAuthorProfile(c echo.Context) error {
 	password := c.FormValue("password")
 	username := c.FormValue("username")
 	experienced, _ := strconv.ParseBool(c.FormValue("experienced"))
-	profPicHeader, _ := c.FormFile("prof_pic")
-	ktpPicHeader, _ := c.FormFile("ktp_pic")
-	// if err != nil {
-	// 	return err
-	// }
-	profPicfile, _ := profPicHeader.Open()
-	ktpPicfile, _ := ktpPicHeader.Open()
-	// if err != nil {
-	// 	return err
-	// }
+	profPicHeader, err := c.FormFile("prof_pic")
+	if err != nil {
+		return err
+	}
+	ktpPicHeader, err := c.FormFile("ktp_pic")
+	if err != nil {
+		return err
+	}
+	profPicfile, err := profPicHeader.Open()
+	if err != nil {
+		return err
+	}
+	ktpPicfile, err := ktpPicHeader.Open()
+	if err != nil {
+		return err
+	}
 	defer profPicfile.Close()
-	profPicPath, _ := helper.UploadFile(profPicfile, profPicHeader.Filename)
-	ktpPicPath, _ := helper.UploadFile(ktpPicfile, profPicHeader.Filename)
+	defer ktpPicfile.Close()
+	profPicPath, _ := helper.UploadFile(uint(authorID), profPicfile, profPicHeader.Filename)
+	ktpPicPath, _ := helper.UploadFile(uint(authorID), ktpPicfile, ktpPicHeader.Filename)
 
 	author.Name = name
 	author.Email = email
@@ -969,7 +976,7 @@ func (h *handler) UpdateReaderProfile(c echo.Context) error {
 	// 	return err
 	// }
 	defer profPicfile.Close()
-	profPicPath, _ := helper.UploadFile(profPicfile, profPicHeader.Filename)
+	profPicPath, _ := helper.UploadFile(uint(readerID), profPicfile, profPicHeader.Filename)
 
 	reader.Name = name
 	reader.Email = email
