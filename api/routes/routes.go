@@ -102,7 +102,7 @@ func (r NewsRoutes) Route() []helper.Route {
 			Handler: newsHandler.GetNews,
 			Middleware: []echo.MiddlewareFunc{
 				middleware.JwtMiddleWareWithRedirect(),
-				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+				middleware.RoleAccessMiddleware("reader"),
 			},
 		},
 		{
@@ -148,7 +148,7 @@ func (r NewsRoutes) Route() []helper.Route {
 			Handler: newsHandler.GetAllHighlightNews,
 			Middleware: []echo.MiddlewareFunc{
 				middleware.JwtMiddleWareWithRedirect(),
-				middleware.RoleAccessMiddleware("admin", "reader", "author"),
+				middleware.RoleAccessMiddleware("admin", "reader"),
 			},
 		},
 

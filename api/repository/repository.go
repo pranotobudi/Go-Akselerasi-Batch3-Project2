@@ -574,9 +574,10 @@ func (r *repository) AddNewsView(newsID uint, readerID uint) error {
 		} else if result.RowsAffected < 1 {
 			return fmt.Errorf("total_view update failed")
 		}
-	} else {
-		return fmt.Errorf("only 1 like allowed for 1 reader")
 	}
+	// } else {
+	// 	return fmt.Errorf("only 1 like allowed for 1 reader")
+	// }
 	return nil
 
 }
