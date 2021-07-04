@@ -54,7 +54,7 @@ func (h *handler) AuthorRegistrationSendEmail(c echo.Context) error {
 	//Schedule Email Sending
 	email := authorReq.Email
 	toEmail := []string{email}
-	emailStruct := task.Email{toEmail, "author"}
+	emailStruct := task.Email{toEmail, "author", regToken}
 	h.taskService.AddEmailQueue(emailStruct)
 
 	// Create JWT token
@@ -101,7 +101,7 @@ func (h *handler) ReaderRegistrationSendEmail(c echo.Context) error {
 	//Schedule Email Sending
 	email := readerReq.Email
 	toEmail := []string{email}
-	emailStruct := task.Email{toEmail, "reader"}
+	emailStruct := task.Email{toEmail, "reader", regToken}
 	h.taskService.AddEmailQueue(emailStruct)
 
 	// create JWT token
@@ -148,7 +148,7 @@ func (h *handler) AdminRegistrationSendEmail(c echo.Context) error {
 	//Schedule Email Sending
 	email := adminReq.Email
 	toEmail := []string{email}
-	emailStruct := task.Email{toEmail, "admin"}
+	emailStruct := task.Email{toEmail, "admin", regToken}
 	h.taskService.AddEmailQueue(emailStruct)
 
 	//Create JWT Token

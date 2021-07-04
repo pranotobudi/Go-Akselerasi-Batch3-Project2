@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-co-op/gocron"
 	"github.com/pranotobudi/Go-Akselerasi-Batch3-Project2/helper"
-	"github.com/thanhpk/randstr"
 )
 
 type BackgroundTask interface {
@@ -21,8 +20,9 @@ type backgroundTask struct {
 }
 
 type Email struct {
-	ToEmail []string
-	Role    string
+	ToEmail  []string
+	Role     string
+	RegToken string
 }
 
 func NewBackgroundTask() *backgroundTask {
@@ -64,12 +64,12 @@ func (bg *backgroundTask) AddEmailQueue(queueOfEmail Email) {
 func (bg *backgroundTask) SendNextEmail(email Email) {
 	// fmt.Println("=========INSIDE SendNextEmail")
 	//Send Confirmation Email
-	regToken := randstr.Hex(16) // generate 128-bit hex string
+	// regToken := randstr.Hex(16) // generate 128-bit hex string
 	msg := []byte("To: " + email.ToEmail[0] + "\r\n" +
 		"Subject: Registration Confirmation Email from News App!\r\n" +
 		"\r\n" +
 		"This is the email body.\r\n" +
-		"http://localhost:8080/api/register/confirmation?email=" + email.ToEmail[0] + "&token=" + regToken + "&role=" + email.Role)
+		"http://localhost:8080/api/register/confirmation?email=" + email.ToEmail[0] + "&token=" + email.RegToken + "&role=" + email.Role)
 
 	helper.SendEmail(email.ToEmail, msg)
 }
