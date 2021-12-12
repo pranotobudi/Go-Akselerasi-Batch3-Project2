@@ -37,3 +37,5 @@ func ErrorFormatter(err error) []string {
 
 	return errors
 }
+
+func ResponseError()
